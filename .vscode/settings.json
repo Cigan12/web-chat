@@ -1,0 +1,17 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.formatOnSave": true,
+  "eslint.validate": ["html", "javascript", "javascriptreact", "typescript"],
+  "eslint.format.enable": true,
+  "eslint.run": "onSave",
+  "path-autocomplete.pathMappings": {
+    "assets": "${folder}/src/assets",
+    "styles": "${folder}/src/styles"
+  },
+  "files.associations": {
+    "*.env.development": "env",
+    "*.env.production": "env"
+  }
+}

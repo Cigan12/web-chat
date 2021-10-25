@@ -1,0 +1,16 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type TestData {
+  id: Int!
+  string: String!
+}
+
+type Query {
+  test: TestData!
+}
+
+type Mutation {
+  toggleTest: Boolean!
+}
