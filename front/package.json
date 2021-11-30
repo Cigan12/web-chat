@@ -22,6 +22,7 @@
         "react-i18next": "^11.12.0",
         "react-router-dom": "^5.2.0",
         "styled-components": "^5.3.3",
+        "subscriptions-transport-ws": "^0.11.0",
         "yup": "^0.32.9"
     },
     "devDependencies": {

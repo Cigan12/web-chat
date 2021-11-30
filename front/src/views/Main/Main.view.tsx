@@ -1,16 +1,16 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    useTestMutationMutation,
-    useTestQueryQuery,
+    useAddMessageMutation,
+    useOnMessageAddedSubscription,
 } from 'generated/graphql.types';
 import { StyledMainView } from './Main.styled';
 import { version } from '../../../package.json';
 
 export const MainView: React.FC = () => {
     const { t: __, i18n } = useTranslation();
-    const { data } = useTestQueryQuery();
-    const [mutate] = useTestMutationMutation();
+    const { data, loading } = useOnMessageAddedSubscription();
+    const [addMessage, { loading: isMessageAdding }] = useAddMessageMutation();
     return (
         <StyledMainView>
             <p>
@@ -33,10 +33,10 @@ export const MainView: React.FC = () => {
 
             <button
                 onClick={() => {
-                    mutate();
+                    addMessage();
                 }}
             >
-                Mutate
+                Add message
             </button>
         </StyledMainView>
     );

@@ -4,7 +4,8 @@ declare module 'process' {
         namespace NodeJS {
             interface Process {
                 env: {
-                    API_URL: string;
+                    NODE_ENV: string;
+                    ACCESS_TOKEN_SECRET: string;
                     ORIGIN: string;
                 };
             }

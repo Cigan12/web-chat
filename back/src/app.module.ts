@@ -1,17 +1,30 @@
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { join } from 'path';
-import { AppController } from './app.controller';
 import { ConfigModule } from '@nestjs/config';
 import { AppService } from './app.service';
-import { TestModule } from './test/test.module';
+import { ChatModule } from './chat/chat.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
     imports: [
         ConfigModule.forRoot({
+            envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
             isGlobal: true,
         }),
+        TypeOrmModule.forRoot({
+            type: 'postgres',
+            host: 'localhost',
+            port: 5432,
+            username: 'postgres',
+            password: 'postgres',
+            database: 'web-chat',
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: true,
+        }),
         GraphQLModule.forRoot({
+            installSubscriptionHandlers: true,
             playground: {
                 settings: {
                     'request.credentials': 'include',
@@ -24,9 +37,9 @@ import { TestModule } from './test/test.module';
                 credentials: true,
             },
         }),
-        TestModule,
+        AuthModule.forRoot(),
+        ChatModule,
     ],
-    controllers: [AppController],
     providers: [AppService],
 })
 export class AppModule {}

@@ -2,15 +2,28 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type TestData {
-  id: Int!
-  string: String!
-}
-
 type Query {
-  test: TestData!
+  get: String!
 }
 
 type Mutation {
-  toggleTest: Boolean!
+  signup(signUpInput: SignUpInput!): Boolean!
+  test: Boolean!
+  signin(signInInput: SignInInput!): Boolean!
+  addMessage: String!
+}
+
+input SignUpInput {
+  email: String!
+  username: String!
+  password: String!
+}
+
+input SignInInput {
+  login: String!
+  password: String!
+}
+
+type Subscription {
+  messageAdded: String!
 }
