@@ -1,18 +1,22 @@
-import { UseGuards } from '@nestjs/common';
+import { UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
-import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { SignInInput } from './inputs/signin.input';
 import { SignUpInput } from './inputs/signup.input';
+import { UserModel } from './models/user.model';
 import { UsersRepository } from './repositories/users.repository';
+import { TokensService } from './tokens.service';
+import { v4 as uuidv4 } from 'uuid';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { GetToken } from './decorators/get-token.decorator';
+import { Token } from './entities/token.entity';
 
 @Resolver()
 export class AuthResolver {
     constructor(
         @InjectRepository(UsersRepository)
         private usersRepository: UsersRepository,
-        private jwtService: JwtService,
+        private tokensService: TokensService,
     ) {}
 
     @Mutation(() => Boolean)
@@ -21,33 +25,60 @@ export class AuthResolver {
         return true;
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtRefreshGuard)
     @Mutation(() => Boolean)
-    test() {
+    async refresh(@GetToken() token: Token, @Context() context) {
+        if (context.req.cookies.uuid !== token.deviceUUID) {
+            throw new UnauthorizedException();
+        }
+
+        const { accessToken, refreshToken } =
+            await this.tokensService.generateTokens(
+                token.deviceUUID,
+                token.userId,
+            );
+
+        context.res.cookie('access_token', accessToken, {
+            httpOnly: true,
+            maxAge: Number(process.env.ACCESS_TOKEN_EXPIRES) * 1000,
+        });
+
+        context.res.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            maxAge: Number(process.env.REFRESH_TOKEN_EXPIRES) * 1000,
+        });
         return true;
     }
 
-    @Mutation(() => Boolean)
+    @Mutation(() => UserModel)
     async signin(
         @Context() context,
         @Args('signInInput') signInInput: SignInInput,
     ) {
-        console.log(
-            '🚀 ~ file: auth.resolver.ts ~ line 27 ~ AuthResolver ~ context',
-            process.env.ACCESS_TOKEN_SECRET,
-        );
-        await this.usersRepository.signin(signInInput);
-        context.res.cookie(
-            'access_token',
-            this.jwtService.sign({
-                login: signInInput.login,
-            }),
-            {
-                httpOnly: true,
-                maxAge: 1000 * 6,
-            },
-        );
+        const user = await this.usersRepository.signin(signInInput);
 
-        return true;
+        const uniqDeviceId = context.req.cookies.uuid
+            ? context.req.cookies.uuid
+            : uuidv4();
+
+        const { accessToken, refreshToken } =
+            await this.tokensService.generateTokens(uniqDeviceId, user.id);
+
+        context.res.cookie('access_token', accessToken, {
+            httpOnly: true,
+            maxAge: Number(process.env.ACCESS_TOKEN_EXPIRES) * 1000,
+        });
+
+        context.res.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            maxAge: Number(process.env.REFRESH_TOKEN_EXPIRES) * 1000,
+        });
+
+        context.res.cookie('uuid', uniqDeviceId, {
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 365,
+        });
+
+        return user;
     }
 }

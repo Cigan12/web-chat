@@ -39,9 +39,12 @@ export class UsersRepository extends Repository<User> {
             const User = await this.findOne({
                 where: [{ email: login }, { username: login }],
             });
+
             const compare = await bcrypt.compare(password, User.password);
             if (compare) {
-                return true;
+                const userWithoutPassword = User;
+                delete userWithoutPassword.password;
+                return userWithoutPassword;
             } else {
                 throw new UnauthorizedException('Invalid credentials');
             }

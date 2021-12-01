@@ -5,7 +5,10 @@ import { AuthResolver } from './auth.resolver';
 import { UsersRepository } from './repositories/users.repository';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule } from '@nestjs/config';
-import { JwtStrategy } from './jwt.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { TokensService } from './tokens.service';
+import { TokensRepository } from './repositories/tokens.repository';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 
 @Module({})
 export class AuthModule {
@@ -15,14 +18,18 @@ export class AuthModule {
                 ConfigModule,
                 PassportModule.register({ defaultStrategy: 'jwt' }),
                 JwtModule.register({
-                    secret: process.env.ACCESS_TOKEN_SECRET,
                     signOptions: {
-                        expiresIn: 1000 * 60,
+                        expiresIn: 6,
                     },
                 }),
-                TypeOrmModule.forFeature([UsersRepository]),
+                TypeOrmModule.forFeature([UsersRepository, TokensRepository]),
             ],
-            providers: [AuthResolver, JwtStrategy],
+            providers: [
+                AuthResolver,
+                JwtStrategy,
+                JwtRefreshStrategy,
+                TokensService,
+            ],
             module: AuthModule,
         };
     }

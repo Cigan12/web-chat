@@ -2,14 +2,20 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type UserModel {
+  id: Int!
+  email: String!
+  username: String!
+}
+
 type Query {
   get: String!
 }
 
 type Mutation {
   signup(signUpInput: SignUpInput!): Boolean!
-  test: Boolean!
-  signin(signInInput: SignInInput!): Boolean!
+  refresh: Boolean!
+  signin(signInInput: SignInInput!): UserModel!
   addMessage: String!
 }
 
