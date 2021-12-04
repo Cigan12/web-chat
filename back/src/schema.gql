@@ -8,15 +8,36 @@ type UserModel {
   username: String!
 }
 
+type MessageModel {
+  id: Int!
+  date: String!
+  message: String!
+  user: UserModel!
+}
+
+type ChatModel {
+  id: Int!
+  type: String!
+  messages: [MessageModel!]!
+  users: [UserModel!]!
+}
+
+type TokensModel {
+  access_token: String!
+  refresh_token: String!
+}
+
 type Query {
   get: String!
+  chats: [ChatModel!]!
 }
 
 type Mutation {
   signup(signUpInput: SignUpInput!): Boolean!
-  refresh: Boolean!
-  signin(signInInput: SignInInput!): UserModel!
-  addMessage: String!
+  refresh: TokensModel!
+  signin(signInInput: SignInInput!): TokensModel!
+  createPrivateChat(contactId: Int!): ChatModel!
+  sendMessage(input: SendMessageInput!): MessageModel!
 }
 
 input SignUpInput {
@@ -30,6 +51,11 @@ input SignInInput {
   password: String!
 }
 
+input SendMessageInput {
+  chatId: Int!
+  message: String!
+}
+
 type Subscription {
-  messageAdded: String!
+  messageSent: MessageModel!
 }

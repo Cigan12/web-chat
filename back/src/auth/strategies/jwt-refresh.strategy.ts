@@ -5,7 +5,7 @@ import { Strategy } from 'passport-jwt';
 import { Token } from '../entities/token.entity';
 import { TokensRepository } from '../repositories/tokens.repository';
 import { IJwtRefreshPayload } from '../types/jwt-refresh-payload.interface';
-import { cookieExtractor } from '../utils/cookie-extractor.util';
+import { refreshExtractor } from '../utils/refreshExtractor.util';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -17,7 +17,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
         private tokensRepository: TokensRepository,
     ) {
         super({
-            jwtFromRequest: cookieExtractor('refresh_token'),
+            jwtFromRequest: refreshExtractor,
             ignoreExpiration: false,
             secretOrKey: process.env.REFRESH_TOKEN_SECRET,
         });

@@ -1,4 +1,14 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Chat } from 'src/chat/entities/chat.entity';
+import { Message } from 'src/chat/entities/message.entity';
+import {
+    BaseEntity,
+    Column,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class User extends BaseEntity {
@@ -13,4 +23,13 @@ export class User extends BaseEntity {
 
     @Column()
     password: string;
+
+    @ManyToMany(() => Chat, (chat) => chat.users, {
+        cascade: true,
+    })
+    @JoinTable()
+    chats: Chat[];
+
+    @OneToMany(() => Message, (message) => message.user)
+    messages: Message[];
 }

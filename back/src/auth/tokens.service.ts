@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SignInInput } from './inputs/signin.input';
 import { TokensRepository } from './repositories/tokens.repository';
-import { UsersRepository } from './repositories/users.repository';
 import { IJwtPayload } from './types/jwt-payload.interface';
 import { IJwtRefreshPayload } from './types/jwt-refresh-payload.interface';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,14 +17,14 @@ export class TokensService {
     getAccessToken(payload: IJwtPayload): string {
         return this.jwtService.sign(payload, {
             secret: process.env.ACCESS_TOKEN_SECRET,
-            expiresIn: process.env.ACCESS_TOKEN_EXPIRES,
+            expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES),
         });
     }
 
     async getRefreshToken(payload: IJwtRefreshPayload): Promise<string> {
         const refresh = this.jwtService.sign(payload, {
             secret: process.env.REFRESH_TOKEN_SECRET,
-            expiresIn: process.env.REFRESH_TOKEN_EXPIRES,
+            expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES),
         });
 
         await this.tokensRepository.createToken({
