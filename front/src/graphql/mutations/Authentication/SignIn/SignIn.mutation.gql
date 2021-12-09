@@ -1,0 +1,6 @@
+mutation SignIn($input: SignInInput!) {
+    signin(signInInput: $input) {
+        access_token
+        refresh_token
+    }
+}
