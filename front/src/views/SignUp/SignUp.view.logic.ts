@@ -11,7 +11,7 @@ export const LSignUpView = () => {
     const { register, handleSubmit } = useForm<ISignUpFields>();
     const [signUp] = useSignUpMutation();
     const onSubmit = handleSubmit(async (values) => {
-        await signUp({
+        const result = await signUp({
             variables: {
                 input: {
                     email: values.email,
@@ -19,13 +19,11 @@ export const LSignUpView = () => {
                     password: values.password,
                 },
             },
-            onError: (error) => {
-                console.log(
-                    '🚀 ~ file: SignUp.view.logic.ts ~ line 23 ~ onSubmit ~ error',
-                    error,
-                );
-            },
         });
+
+        if (result.data?.signup) {
+            alert('Success');
+        }
     });
 
     return {

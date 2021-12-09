@@ -13,6 +13,12 @@ const SignUpView = React.lazy(() =>
     })),
 );
 
+const SignInView = React.lazy(() =>
+    import('./views/SignIn/SignIn.view').then(({ SignInView }) => ({
+        default: SignInView,
+    })),
+);
+
 export const App: React.FC = () => (
     <div>
         <Router>
@@ -25,6 +31,11 @@ export const App: React.FC = () => (
                 <Route path="/signup">
                     <Suspense fallback="loading">
                         <SignUpView />
+                    </Suspense>
+                </Route>
+                <Route path="/signin">
+                    <Suspense fallback="loading">
+                        <SignInView />
                     </Suspense>
                 </Route>
             </Switch>
