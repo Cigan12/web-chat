@@ -1,5 +1,5 @@
 import { UnauthorizedException, UseGuards } from '@nestjs/common';
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SignInInput } from './inputs/signin.input';
 import { SignUpInput } from './inputs/signup.input';
@@ -10,6 +10,8 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { GetToken } from './decorators/get-token.decorator';
 import { Token } from './entities/token.entity';
 import { TokensModel } from './models/tokens.model';
+import { UserModel } from './models/user.model';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Resolver()
 export class AuthResolver {
@@ -67,5 +69,13 @@ export class AuthResolver {
             access_token: accessToken,
             refresh_token: refreshToken,
         };
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Query(() => [UserModel])
+    async findUsers(@Args('username', { nullable: true }) username: string) {
+        const users = await this.usersRepository.findUserByUserName(username);
+
+        return users;
     }
 }

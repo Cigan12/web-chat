@@ -1,4 +1,4 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityRepository, Like, Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { SignUpInput } from '../inputs/signup.input';
 import * as bcrypt from 'bcrypt';
@@ -51,5 +51,15 @@ export class UsersRepository extends Repository<User> {
         } catch {
             throw new UnauthorizedException('Invalid credentials');
         }
+    }
+
+    async findUserByUserName(username: string) {
+        if (username.length < 2) {
+            return [];
+        }
+        const users = await this.find({
+            username: Like(`%${username}%`),
+        });
+        return users;
     }
 }

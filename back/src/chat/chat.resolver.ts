@@ -6,54 +6,34 @@ import {
     Query,
     Args,
     Int,
-    Context,
 } from '@nestjs/graphql';
-import { InjectRepository } from '@nestjs/typeorm';
 import { PubSub } from 'graphql-subscriptions';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { UsersRepository } from 'src/auth/repositories/users.repository';
+import { ChatService } from './chat.service';
 import { SendMessageInput } from './inputs/send-message.input';
 import { ChatModel } from './models/chat.model';
 import { MessageModel } from './models/message.model';
-import { ChatRepository } from './repositories/chats.repository';
 
 const pubSub = new PubSub();
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
 export class ChatResolver {
-    constructor(
-        @InjectRepository(ChatRepository)
-        private chatRepository: ChatRepository,
-        @InjectRepository(UsersRepository)
-        private usersRepository: UsersRepository,
-    ) {}
-
-    @Query(() => String)
-    get() {
-        return 'test';
-    }
+    constructor(private chatService: ChatService) {}
 
     @Mutation(() => ChatModel)
     async createPrivateChat(
         @GetUser() user: User,
         @Args({ name: 'contactId', type: () => Int }) contactId: number,
     ) {
-        const contact = await this.usersRepository.findOne(contactId);
-
-        return await this.chatRepository.createPrivateChat([user, contact]);
+        return await this.chatService.createPrivateChat(user, contactId);
     }
 
     @Query(() => [ChatModel])
     async chats(@GetUser() user: User) {
-        const userMatch = await this.usersRepository.findOne({
-            relations: ['chats'],
-            where: { id: user.id },
-        });
-
-        return userMatch.chats;
+        return await this.chatService.getChats(user);
     }
 
     @Subscription(() => MessageModel)
@@ -67,7 +47,7 @@ export class ChatResolver {
         @Args({ name: 'input', type: () => SendMessageInput })
         input: SendMessageInput,
     ) {
-        const message = await this.chatRepository.sendMessage(user, input);
+        const message = await this.chatService.sendMessage(user, input);
         pubSub.publish('messageSent', {
             messageSent: message,
         });

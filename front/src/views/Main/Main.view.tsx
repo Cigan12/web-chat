@@ -1,32 +1,34 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-
-import { useGetChatsQuery } from 'generated/graphql.types';
+import React, { useState } from 'react';
+import {
+    useFindUsersQuery,
+    useGetChatsQuery,
+    useNewMessagesSubscription,
+} from 'generated/graphql.types';
 import { StyledMainView } from './Main.styled';
 import { version } from '../../../package.json';
 
 export const MainView: React.FC = () => {
-    const { t: __, i18n } = useTranslation();
     const { data } = useGetChatsQuery();
+    const { data: messages } = useNewMessagesSubscription();
+    const { data: users, refetch } = useFindUsersQuery();
+    const handleSearchUsers: React.ChangeEventHandler<HTMLInputElement> =
+        async (e) => {
+            await refetch({
+                username: e.target.value,
+            });
+        };
+
     return (
         <StyledMainView>
-            <p>
-                {' '}
-                {__('Шаблон версии: ')} {version}
-            </p>
+            <p> Web chat: {version}</p>
             <pre>{JSON.stringify(data)}</pre>
-
-            <button
-                onClick={() => {
-                    if (i18n.language === 'en') {
-                        i18n.changeLanguage('ru');
-                    } else {
-                        i18n.changeLanguage('en');
-                    }
-                }}
-            >
-                switch lang
-            </button>
+            <pre>{JSON.stringify(messages?.messageSent)}</pre>
+            <input
+                type="text"
+                placeholder="search friends"
+                onChange={handleSearchUsers}
+            />
+            <pre>{JSON.stringify(users?.findUsers)}</pre>
         </StyledMainView>
     );
 };

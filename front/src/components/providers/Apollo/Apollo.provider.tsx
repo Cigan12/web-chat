@@ -7,6 +7,7 @@ import {
     split,
     from,
     gql,
+    ApolloLink,
 } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { getMainDefinition } from '@apollo/client/utilities';
@@ -39,10 +40,15 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
             uri: import.meta.env.VITE_API_WS_URL,
             options: {
                 reconnect: true,
+                connectionParams: () => ({
+                    authorization: `Bearer ${localStorage.getItem(
+                        'access_token',
+                    )}`,
+                }),
             },
         });
 
-        const authLink = setContext(async (operation, { headers }) => {
+        const authLink = setContext(async (operation, param) => {
             const access_token = localStorage.getItem('access_token');
             const refresh_token = localStorage.getItem('refresh_token');
             if (access_token) {
@@ -62,7 +68,7 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
                         );
                         return {
                             headers: {
-                                ...headers,
+                                ...param.headers,
                                 authorization: `Bearer ${newTokens.access_token}`,
                                 refresh_token: newTokens.refresh_token,
                             },
@@ -71,7 +77,7 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
                 }
                 return {
                     headers: {
-                        ...headers,
+                        ...param.headers,
                         authorization: access_token
                             ? `Bearer ${access_token}`
                             : '',
@@ -86,6 +92,8 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
                 graphQLErrors.forEach(({ message, extensions }) => {
                     // HANDLE ACCESS EXPIRED
                     if (extensions?.response.statusCode === 401) {
+                        localStorage.removeItem('access_token');
+                        localStorage.removeItem('refresh_token');
                         window.location.pathname = 'signin';
                         showError(message);
                     }
@@ -106,11 +114,11 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
                 );
             },
             wsLink,
-            from([authLink, errorLink, httpLink]),
+            httpLink,
         );
 
         const client = new ApolloClient({
-            link: splitLink,
+            link: from([authLink, errorLink, splitLink]),
             cache: new InMemoryCache(),
         });
 

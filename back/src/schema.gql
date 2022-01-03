@@ -28,7 +28,7 @@ type TokensModel {
 }
 
 type Query {
-  get: String!
+  findUsers(username: String): [UserModel!]!
   chats: [ChatModel!]!
 }
 
@@ -52,7 +52,8 @@ input SignInInput {
 }
 
 input SendMessageInput {
-  chatId: Int!
+  chatId: String
+  contactId: Int
   message: String!
 }
 

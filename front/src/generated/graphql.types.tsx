@@ -62,11 +62,17 @@ export type MutationSignupArgs = {
 export type Query = {
   __typename?: 'Query';
   chats: Array<ChatModel>;
-  get: Scalars['String'];
+  findUsers: Array<UserModel>;
+};
+
+
+export type QueryFindUsersArgs = {
+  username?: Maybe<Scalars['String']>;
 };
 
 export type SendMessageInput = {
-  chatId: Scalars['Int'];
+  chatId?: Maybe<Scalars['String']>;
+  contactId?: Maybe<Scalars['Int']>;
   message: Scalars['String'];
 };
 
@@ -117,6 +123,13 @@ export type SignUpMutationVariables = Exact<{
 
 
 export type SignUpMutation = { __typename?: 'Mutation', signup: boolean };
+
+export type FindUsersQueryVariables = Exact<{
+  username?: Maybe<Scalars['String']>;
+}>;
+
+
+export type FindUsersQuery = { __typename?: 'Query', findUsers: Array<{ __typename?: 'UserModel', id: number, username: string, email: string }> };
 
 export type SendMessageMutationVariables = Exact<{
   input: SendMessageInput;
@@ -234,6 +247,43 @@ export function useSignUpMutation(baseOptions?: Apollo.MutationHookOptions<SignU
 export type SignUpMutationHookResult = ReturnType<typeof useSignUpMutation>;
 export type SignUpMutationResult = Apollo.MutationResult<SignUpMutation>;
 export type SignUpMutationOptions = Apollo.BaseMutationOptions<SignUpMutation, SignUpMutationVariables>;
+export const FindUsersDocument = gql`
+    query FindUsers($username: String) {
+  findUsers(username: $username) {
+    id
+    username
+    email
+  }
+}
+    `;
+
+/**
+ * __useFindUsersQuery__
+ *
+ * To run a query within a React component, call `useFindUsersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useFindUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useFindUsersQuery({
+ *   variables: {
+ *      username: // value for 'username'
+ *   },
+ * });
+ */
+export function useFindUsersQuery(baseOptions?: Apollo.QueryHookOptions<FindUsersQuery, FindUsersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<FindUsersQuery, FindUsersQueryVariables>(FindUsersDocument, options);
+      }
+export function useFindUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FindUsersQuery, FindUsersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<FindUsersQuery, FindUsersQueryVariables>(FindUsersDocument, options);
+        }
+export type FindUsersQueryHookResult = ReturnType<typeof useFindUsersQuery>;
+export type FindUsersLazyQueryHookResult = ReturnType<typeof useFindUsersLazyQuery>;
+export type FindUsersQueryResult = Apollo.QueryResult<FindUsersQuery, FindUsersQueryVariables>;
 export const SendMessageDocument = gql`
     mutation sendMessage($input: SendMessageInput!) {
   sendMessage(input: $input) {
