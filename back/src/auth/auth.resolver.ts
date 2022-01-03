@@ -12,6 +12,8 @@ import { Token } from './entities/token.entity';
 import { TokensModel } from './models/tokens.model';
 import { UserModel } from './models/user.model';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GetUser } from './decorators/get-user.decorator';
+import { User } from './entities/user.entity';
 
 @Resolver()
 export class AuthResolver {
@@ -73,9 +75,21 @@ export class AuthResolver {
 
     @UseGuards(JwtAuthGuard)
     @Query(() => [UserModel])
-    async findUsers(@Args('username', { nullable: true }) username: string) {
-        const users = await this.usersRepository.findUserByUserName(username);
+    async findUsers(
+        @GetUser() user: User,
+        @Args('username', { nullable: true }) username?: string,
+    ) {
+        const users = await this.usersRepository.findUserByUserName(
+            user,
+            username,
+        );
 
         return users;
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Query(() => UserModel)
+    async getUser(@GetUser() user: User) {
+        return user;
     }
 }

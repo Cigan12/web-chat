@@ -1,4 +1,4 @@
-import { EntityRepository, Like, Repository } from 'typeorm';
+import { EntityRepository, Like, Not, Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { SignUpInput } from '../inputs/signup.input';
 import * as bcrypt from 'bcrypt';
@@ -53,12 +53,22 @@ export class UsersRepository extends Repository<User> {
         }
     }
 
-    async findUserByUserName(username: string) {
+    async findUserByUserName(user: User, username?: string) {
+        // FOR AN UNDEFINED CASE RETURN EMPTY
+        if (!username) {
+            return [];
+        }
+
         if (username.length < 2) {
             return [];
         }
         const users = await this.find({
-            username: Like(`%${username}%`),
+            where: [
+                {
+                    username: Like(`%${username}%`),
+                    id: Not(user.id),
+                },
+            ],
         });
         return users;
     }

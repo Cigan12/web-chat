@@ -7,7 +7,6 @@ import {
     Args,
     Int,
 } from '@nestjs/graphql';
-import { PubSub } from 'graphql-subscriptions';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -15,8 +14,6 @@ import { ChatService } from './chat.service';
 import { SendMessageInput } from './inputs/send-message.input';
 import { ChatModel } from './models/chat.model';
 import { MessageModel } from './models/message.model';
-
-const pubSub = new PubSub();
 
 @Resolver()
 @UseGuards(JwtAuthGuard)
@@ -38,7 +35,12 @@ export class ChatResolver {
 
     @Subscription(() => MessageModel)
     messageSent() {
-        return pubSub.asyncIterator('messageSent');
+        return this.chatService.messageSent();
+    }
+
+    @Subscription(() => ChatModel)
+    newChatCreated() {
+        return this.chatService.newChatCreated();
     }
 
     @Mutation(() => MessageModel)
@@ -48,9 +50,18 @@ export class ChatResolver {
         input: SendMessageInput,
     ) {
         const message = await this.chatService.sendMessage(user, input);
-        pubSub.publish('messageSent', {
-            messageSent: message,
-        });
+
         return message;
+    }
+
+    @Query(() => ChatModel, {
+        nullable: true,
+    })
+    async privateChat(
+        @GetUser() user: User,
+        @Args({ name: 'contactId', type: () => Int })
+        contactId: number,
+    ) {
+        return await this.chatService.getPrivateChat(user, contactId);
     }
 }

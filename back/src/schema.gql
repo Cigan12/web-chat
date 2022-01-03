@@ -29,7 +29,9 @@ type TokensModel {
 
 type Query {
   findUsers(username: String): [UserModel!]!
+  getUser: UserModel!
   chats: [ChatModel!]!
+  privateChat(contactId: Int!): ChatModel
 }
 
 type Mutation {
@@ -52,11 +54,12 @@ input SignInInput {
 }
 
 input SendMessageInput {
-  chatId: String
+  chatId: Int
   contactId: Int
   message: String!
 }
 
 type Subscription {
   messageSent: MessageModel!
+  newChatCreated: ChatModel!
 }

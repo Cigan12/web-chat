@@ -4,8 +4,7 @@ mutation sendMessage($input: SendMessageInput!) {
         date
         message
         user {
-            email
-            username
+            id
         }
     }
 }

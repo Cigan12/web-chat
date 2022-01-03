@@ -1,0 +1,22 @@
+subscription NewChatCreated {
+    newChatCreated {
+        id
+        type
+        users {
+            id
+            email
+            username
+        }
+        messages {
+            id
+            date
+            message
+
+            user {
+                id
+                email
+                username
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+query GetPrivateChat($contactId: Int!) {
+    privateChat(contactId: $contactId) {
+        id
+        type
+        messages {
+            id
+            date
+            message
+            user {
+                id
+            }
+        }
+    }
+}

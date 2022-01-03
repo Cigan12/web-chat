@@ -5,8 +5,6 @@ subscription NewMessages {
         message
         user {
             id
-            email
-            username
         }
     }
 }

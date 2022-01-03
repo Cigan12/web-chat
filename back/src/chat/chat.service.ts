@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PubSub } from 'graphql-subscriptions';
 import { User } from 'src/auth/entities/user.entity';
 import { UsersRepository } from 'src/auth/repositories/users.repository';
 import { SendMessageInput } from './inputs/send-message.input';
 import { ChatRepository } from './repositories/chats.repository';
 
+const pubSub = new PubSub();
 @Injectable()
 export class ChatService {
     constructor(
@@ -16,8 +18,14 @@ export class ChatService {
 
     async createPrivateChat(user: User, contactId: number) {
         const contact = await this.usersRepository.findOne(contactId);
-
-        return await this.chatRepository.createPrivateChat([user, contact]);
+        const newChat = await this.chatRepository.createPrivateChat([
+            user,
+            contact,
+        ]);
+        pubSub.publish('newChatCreated', {
+            newChatCreated: newChat,
+        });
+        return newChat;
     }
 
     async getChats(user: User) {
@@ -30,19 +38,61 @@ export class ChatService {
     }
 
     async sendMessage(user: User, input: SendMessageInput) {
-        if (!input.chatId && input.contactId) {
-            const chat = await this.createPrivateChat(user, input.contactId);
-            return await this.sendMessageToChat(user, {
-                chatId: chat.id,
-                contactId: input.contactId,
-                message: input.message,
-            });
+        if (!input.chatId) {
+            const existingChat = await this.getPrivateChat(
+                user,
+                input.contactId,
+            );
+
+            if (!existingChat) {
+                const chat = await this.createPrivateChat(
+                    user,
+                    input.contactId,
+                );
+                return await this.sendMessageToChat(user, {
+                    chatId: Number(chat.id),
+                    contactId: input.contactId,
+                    message: input.message,
+                });
+            }
         }
-        return await this.sendMessageToChat(user, input);
+        const message = await this.sendMessageToChat(user, input);
+
+        pubSub.publish('messageSent', {
+            messageSent: message,
+        });
+
+        return message;
     }
 
     async sendMessageToChat(user: User, input: SendMessageInput) {
         const message = await this.chatRepository.sendMessage(user, input);
         return message;
+    }
+
+    async getPrivateChat(user: User, userId: number) {
+        const chat = await this.chatRepository
+            .createQueryBuilder('chat')
+            .leftJoinAndSelect('chat.messages', 'message')
+            .leftJoinAndSelect('message.user', 'messageUser')
+            .leftJoinAndSelect('chat.users', 'user')
+            .where('user.id = :id', {
+                id: user.id,
+            })
+            .andWhere('user.id = :id', {
+                id: userId,
+            })
+            .getOne();
+
+        return chat;
+    }
+
+    // SUBSCRIPTIONS
+    messageSent() {
+        return pubSub.asyncIterator('messageSent');
+    }
+
+    newChatCreated() {
+        return pubSub.asyncIterator('newChatCreated');
     }
 }

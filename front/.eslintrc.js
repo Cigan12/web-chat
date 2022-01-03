@@ -52,6 +52,7 @@ module.exports = {
         'no-debugger': 'off',
         'react/jsx-props-no-spreading': 'off',
         'react/display-name': 'off',
+        'react/require-default-props': 'off',
     },
     settings: {
         'import/resolver': {
