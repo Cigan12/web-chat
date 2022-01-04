@@ -39,11 +39,14 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
             uri: import.meta.env.VITE_API_WS_URL,
             options: {
                 reconnect: true,
-                connectionParams: () => ({
-                    authorization: `Bearer ${localStorage.getItem(
-                        'access_token',
-                    )}`,
-                }),
+                timeout: 2000,
+                connectionParams: () => {
+                    return {
+                        authorization: `Bearer ${localStorage.getItem(
+                            'access_token',
+                        )}`,
+                    };
+                },
             },
         });
 
@@ -90,7 +93,10 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
             if (graphQLErrors) {
                 graphQLErrors.forEach(({ message, extensions }) => {
                     // HANDLE ACCESS EXPIRED
-                    if (extensions?.response.statusCode === 401) {
+                    if (
+                        extensions?.response.statusCode === 401 ||
+                        message === 'Unauthorized'
+                    ) {
                         localStorage.removeItem('access_token');
                         localStorage.removeItem('refresh_token');
                         window.location.pathname = 'signin';
@@ -100,7 +106,7 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
             }
 
             if (networkError) {
-                console.log(`[Network error]: ${networkError}`);
+                showError(`[Network error]: ${networkError}`);
             }
         });
 
