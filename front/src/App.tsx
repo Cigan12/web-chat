@@ -7,38 +7,14 @@ const MainView = React.lazy(() =>
     })),
 );
 
-const SignUpView = React.lazy(() =>
-    import('./views/SignUp/SignUp.view').then(({ SignUpView }) => ({
-        default: SignUpView,
-    })),
-);
-
-const SignInView = React.lazy(() =>
-    import('./views/SignIn/SignIn.view').then(({ SignInView }) => ({
-        default: SignInView,
-    })),
-);
-
 export const App: React.FC = () => (
     <div>
-        <Router>
-            <Switch>
-                <Route path="/" exact>
-                    <Suspense fallback="loading">
-                        <MainView />
-                    </Suspense>
-                </Route>
-                <Route path="/signup">
-                    <Suspense fallback="loading">
-                        <SignUpView />
-                    </Suspense>
-                </Route>
-                <Route path="/signin">
-                    <Suspense fallback="loading">
-                        <SignInView />
-                    </Suspense>
-                </Route>
-            </Switch>
-        </Router>
+        <Switch>
+            <Route path="/" exact>
+                <Suspense fallback="loading">
+                    <MainView />
+                </Suspense>
+            </Route>
+        </Switch>
     </div>
 );

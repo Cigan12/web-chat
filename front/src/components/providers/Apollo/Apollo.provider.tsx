@@ -15,7 +15,6 @@ import { setContext } from '@apollo/client/link/context';
 import { RefreshMutation } from 'generated/graphql.types';
 
 interface IApolloProviderProps {
-    showError: (message: string) => void;
     children: React.ReactNode;
 }
 
@@ -29,7 +28,8 @@ const refreshMutation = gql`
 `;
 
 export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
-    ({ children, showError }) => {
+    ({ children }) => {
+        console.log('render');
         const httpLink = new HttpLink({
             uri: import.meta.env.VITE_API_URL,
             credentials: 'include',
@@ -93,20 +93,20 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
             if (graphQLErrors) {
                 graphQLErrors.forEach(({ message, extensions }) => {
                     // HANDLE ACCESS EXPIRED
-                    if (
-                        extensions?.response.statusCode === 401 ||
-                        message === 'Unauthorized'
-                    ) {
-                        localStorage.removeItem('access_token');
-                        localStorage.removeItem('refresh_token');
-                        window.location.pathname = 'signin';
-                        showError(message);
-                    }
+                    // if (
+                    //     extensions?.response.statusCode === 401 ||
+                    //     message === 'Unauthorized'
+                    // ) {
+                    //     localStorage.removeItem('access_token');
+                    //     localStorage.removeItem('refresh_token');
+                    //     window.location.pathname = 'signin';
+                    //     showError(message);
+                    // }
                 });
             }
 
             if (networkError) {
-                showError(`[Network error]: ${networkError}`);
+                console.log(`[Network error]: ${networkError}`);
             }
         });
 

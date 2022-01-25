@@ -5,6 +5,7 @@ interface ISignUpFields {
     username: string;
     email: string;
     password: string;
+    passwordRepeat: string;
 }
 
 export const LSignUpView = () => {
