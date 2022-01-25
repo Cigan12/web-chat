@@ -1,5 +1,6 @@
 import { useSignUpMutation } from 'generated/graphql.types';
 import { useForm } from 'react-hook-form';
+import { ISignUpModalProps } from './SignUp.modal';
 
 interface ISignUpFields {
     username: string;
@@ -8,7 +9,9 @@ interface ISignUpFields {
     passwordRepeat: string;
 }
 
-export const LSignUpView = () => {
+export const LSignUpView = (
+    onOpenSignInModal: ISignUpModalProps['onOpenSignInModal'],
+) => {
     const { register, handleSubmit } = useForm<ISignUpFields>();
     const [signUp] = useSignUpMutation();
     const onSubmit = handleSubmit(async (values) => {
@@ -23,7 +26,7 @@ export const LSignUpView = () => {
         });
 
         if (result.data?.signup) {
-            alert('Success');
+            onOpenSignInModal();
         }
     });
 

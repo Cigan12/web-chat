@@ -11,6 +11,7 @@ import {
 import { UserCard } from 'components/cards/UserCard/UserCard.component';
 import { ChatComponent } from 'components/modules/Chat/Chat.component';
 import { ChatCardComponent } from 'components/cards/ChatCard/ChatCard.component';
+import { useHandleErrors } from 'hooks/errors/HandleErrors.hook';
 import { StyledMainLayout, StyledMainView } from './Main.styled';
 import { version } from '../../../package.json';
 
@@ -22,11 +23,24 @@ interface ISubscriptionData {
 
 export const MainView: React.FC = () => {
     // CURRENT USER
-    const { data: currentUser } = useGetUserQuery();
+    const { data: currentUser, error: getUserError } = useGetUserQuery();
+
+    const getUserErrors = getUserError?.graphQLErrors || [];
 
     // QUERIES
-    const { data: chats, subscribeToMore } = useGetChatsQuery();
-    const { data: users, refetch } = useFindUsersQuery();
+    const {
+        data: chats,
+        subscribeToMore,
+        error: getChatsError,
+    } = useGetChatsQuery();
+
+    const getChatsErrors = getChatsError?.graphQLErrors || [];
+
+    const { data: users, refetch, error: findUsersError } = useFindUsersQuery();
+
+    const findUserErrors = findUsersError?.graphQLErrors || [];
+
+    useHandleErrors([...getUserErrors, ...getChatsErrors, ...findUserErrors]);
 
     useEffect(() => {
         subscribeToMore({

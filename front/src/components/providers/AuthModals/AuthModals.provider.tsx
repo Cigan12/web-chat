@@ -1,16 +1,22 @@
 import { SignInModal } from 'components/modals/SignIn/SignIn.modal';
 import { SignUpModal } from 'components/modals/SignUp/SignUp.modal';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 import { noop } from 'utils/SmallHelpers/noop.helper';
 
 const initialContextValue: IAuthModalsContext = {
     toggleSignInModal: noop,
+    signInModal: false,
     toggleSignUpModal: noop,
+    openSignInModal: noop,
+    signUpModal: false,
 };
 
 interface IAuthModalsContext {
     toggleSignInModal: () => void;
+    openSignInModal: () => void;
+    signInModal: boolean;
     toggleSignUpModal: () => void;
+    signUpModal: boolean;
 }
 
 const AuthModalsContext =
@@ -22,11 +28,15 @@ export const useAuthModals = () => {
 
 export const AuthModalsProvider: React.FC = ({ children }) => {
     // SIGN IN MODAL
-    const [signInModal, setSignInModal] = useState(true);
+    const [signInModal, setSignInModal] = useState(false);
 
-    const toggleSignInModal = () => {
+    const toggleSignInModal = useCallback(() => {
         setSignInModal((prev) => !prev);
-    };
+    }, []);
+
+    const openSignInModal = useCallback(() => {
+        setSignInModal(true);
+    }, []);
 
     // SIGN UP MODAL
     const [signUpModal, setSignUpModal] = useState(false);
@@ -47,14 +57,20 @@ export const AuthModalsProvider: React.FC = ({ children }) => {
 
     const contextValue: IAuthModalsContext = {
         toggleSignInModal,
+        openSignInModal,
+        signInModal,
         toggleSignUpModal,
+        signUpModal,
     };
 
     return (
         <AuthModalsContext.Provider value={contextValue}>
             {children}
             {signInModal && (
-                <SignInModal onOpenRegisterModal={handleOpenSignUpModal} />
+                <SignInModal
+                    onOpenRegisterModal={handleOpenSignUpModal}
+                    onClose={toggleSignInModal}
+                />
             )}
             {signUpModal && (
                 <SignUpModal onOpenSignInModal={handleOpenSignInModal} />

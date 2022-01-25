@@ -12,14 +12,16 @@ import {
 import { StyledModalOverlay } from '../CommonStyles/CommonStyles.modal.styled';
 import { LSignInLogic } from './SignIn.modal.logic';
 
-interface ISignInModalProps {
+export interface ISignInModalProps {
     onOpenRegisterModal: () => void;
+    onClose: () => void;
 }
 
 export const SignInModal: React.FC<ISignInModalProps> = ({
     onOpenRegisterModal,
+    onClose,
 }) => {
-    const { onSubmit, register } = LSignInLogic();
+    const { onSubmit, register } = LSignInLogic(onClose);
     return (
         <StyledModalOverlay>
             <StyledAuthModal>

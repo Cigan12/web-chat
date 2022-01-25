@@ -1,12 +1,13 @@
 import { useSignInMutation } from 'generated/graphql.types';
 import { useForm } from 'react-hook-form';
+import { ISignInModalProps } from './SignIn.modal';
 
 interface ISignInFields {
     login: string;
     password: string;
 }
 
-export const LSignInLogic = () => {
+export const LSignInLogic = (onClose: ISignInModalProps['onClose']) => {
     const { register, handleSubmit } = useForm<ISignInFields>();
     const [signIn] = useSignInMutation();
 
@@ -24,7 +25,7 @@ export const LSignInLogic = () => {
             const { access_token, refresh_token } = result.data?.signin;
             localStorage.setItem('access_token', access_token);
             localStorage.setItem('refresh_token', refresh_token);
-            alert('Success');
+            onClose();
         }
     });
 

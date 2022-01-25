@@ -12,14 +12,14 @@ import {
 import { StyledModalOverlay } from '../CommonStyles/CommonStyles.modal.styled';
 import { LSignUpView } from './SignUp.modal.logic';
 
-interface ISignUpModalProps {
+export interface ISignUpModalProps {
     onOpenSignInModal: () => void;
 }
 
 export const SignUpModal: React.FC<ISignUpModalProps> = ({
     onOpenSignInModal,
 }) => {
-    const { onSubmit, register } = LSignUpView();
+    const { onSubmit, register } = LSignUpView(onOpenSignInModal);
 
     return (
         <StyledModalOverlay>

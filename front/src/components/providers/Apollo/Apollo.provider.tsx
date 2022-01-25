@@ -29,7 +29,6 @@ const refreshMutation = gql`
 
 export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
     ({ children }) => {
-        console.log('render');
         const httpLink = new HttpLink({
             uri: import.meta.env.VITE_API_URL,
             credentials: 'include',
