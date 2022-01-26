@@ -19,6 +19,10 @@ import SearchIcon from 'assets/small/search.svg';
 import { IMenuItem, Menu } from 'components/ui/Menu/Menu.component';
 import ExitIcon from 'assets/small/exit.svg';
 import {
+    ENotificationModalType,
+    useNotificationModals,
+} from 'components/providers/NotificationModals/NotificationModals.provider';
+import {
     StyledChatCard,
     StyledMainAside,
     StyledMainAsideTopbar,
@@ -38,6 +42,8 @@ export const MainView: React.FC = () => {
 
     const getUserErrors = getUserError?.graphQLErrors || [];
 
+    const { toggleNotificationModal } = useNotificationModals();
+
     // QUERIES
     const {
         data: chats,
@@ -54,6 +60,10 @@ export const MainView: React.FC = () => {
     useHandleErrors([...getUserErrors, ...getChatsErrors, ...findUserErrors]);
 
     useEffect(() => {
+        toggleNotificationModal({
+            text: 'Письмо для подтверждения отправлено Вам на почту ',
+            type: ENotificationModalType.INFO,
+        });
         subscribeToMore({
             document: NewChatCreatedDocument,
             updateQuery: (prev, { subscriptionData }: ISubscriptionData) => {
