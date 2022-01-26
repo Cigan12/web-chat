@@ -9,5 +9,5 @@ export const ThemeFonts = {
     i500f16l20: '500 16px/20px Inter',
 
     // FW-700
-    i700f16l20: '700 14px/16px Inter',
+    i700f14l16: '700 14px/16px Inter',
 };

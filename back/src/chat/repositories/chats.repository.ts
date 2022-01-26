@@ -16,6 +16,12 @@ export class ChatRepository extends Repository<Chat> {
 
     async sendMessage(user: User, messageInput: SendMessageInput) {
         const chat = await this.findOne(messageInput.chatId);
+        const isSenderExistInChat = chat.users.find(
+            (user) => user.id === user.id,
+        );
+        if (!isSenderExistInChat) {
+            chat.users.push(user);
+        }
         const message = new Message();
         message.user = user;
         message.date = new Date();

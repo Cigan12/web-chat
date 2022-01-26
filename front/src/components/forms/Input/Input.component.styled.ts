@@ -34,3 +34,10 @@ export const StyledInputError = styled.span`
     font: ${({ theme }) => theme.fonts.i400f12l16};
     color: ${({ theme }) => theme.colors.red};
 `;
+
+export const StyledInputIconRight = styled.img`
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+`;

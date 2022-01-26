@@ -24,6 +24,10 @@ export const ThemeColors = {
      */
     lightgray: '#F5F5F5',
     /**
+     * value - #FAFAFA
+     */
+    mediumGray: '#FAFAFA',
+    /**
      * value - #9C9C9C
      */
     gray: '#9C9C9C',
@@ -35,4 +39,8 @@ export const ThemeColors = {
      * value - #5A5A5A
      */
     boldGray: '#5A5A5A',
+    /**
+     * value - #F2F8FF
+     */
+    messageBg: '#F2F8FF',
 };

@@ -35,7 +35,13 @@ export const AuthModalsProvider: React.FC = ({ children }) => {
     }, []);
 
     const openSignInModal = useCallback(() => {
+        console.log('opening');
         setSignInModal(true);
+    }, []);
+
+    const closeSignInModal = useCallback(() => {
+        console.log('closign');
+        setSignInModal(false);
     }, []);
 
     // SIGN UP MODAL
@@ -69,7 +75,7 @@ export const AuthModalsProvider: React.FC = ({ children }) => {
             {signInModal && (
                 <SignInModal
                     onOpenRegisterModal={handleOpenSignUpModal}
-                    onClose={toggleSignInModal}
+                    onClose={closeSignInModal}
                 />
             )}
             {signUpModal && (

@@ -83,7 +83,10 @@ export class ChatService {
                 id: userId,
             })
             .getOne();
-
+        console.log(
+            '🚀 ~ file: chat.service.ts ~ line 86 ~ ChatService ~ getPrivateChat ~ chat',
+            chat,
+        );
         return chat;
     }
 

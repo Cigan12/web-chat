@@ -8,12 +8,23 @@ import {
     useGetChatsQuery,
     useGetUserQuery,
 } from 'generated/graphql.types';
-import { UserCard } from 'components/cards/UserCard/UserCard.component';
+import {
+    IUserCardMessage,
+    UserCard,
+} from 'components/cards/UserCard/UserCard.component';
 import { ChatComponent } from 'components/modules/Chat/Chat.component';
-import { ChatCardComponent } from 'components/cards/ChatCard/ChatCard.component';
 import { useHandleErrors } from 'hooks/errors/HandleErrors.hook';
-import { StyledMainLayout, StyledMainView } from './Main.styled';
-import { version } from '../../../package.json';
+import { Input } from 'components/forms/Input/Input.component';
+import SearchIcon from 'assets/small/search.svg';
+import { IMenuItem, Menu } from 'components/ui/Menu/Menu.component';
+import ExitIcon from 'assets/small/exit.svg';
+import {
+    StyledChatCard,
+    StyledMainAside,
+    StyledMainAsideTopbar,
+    StyledMainLayout,
+    StyledMainView,
+} from './Main.styled';
 
 interface ISubscriptionData {
     subscriptionData: {
@@ -89,21 +100,59 @@ export const MainView: React.FC = () => {
             });
         };
 
+    // MENU STRUCTURE
+
+    const menuStructure: Array<IMenuItem> = [
+        {
+            alt: 'exit icon',
+            iconSrc: ExitIcon,
+            onClick: () => {
+                console.log('logout');
+            },
+            text: 'Выйти',
+        },
+    ];
+
+    const computeChatName = (chat: GetChatsQuery['chats'][number]) => {
+        const chatUsers = chat.users;
+        const notCurrentUser = chatUsers?.find(
+            (item) => item.id !== currentUser?.getUser.id,
+        );
+        const chatName =
+            chat.type === 'PRIVATE'
+                ? notCurrentUser?.username
+                : 'Some chat name';
+        return chatName;
+    };
+
+    const generateMessage = (
+        message: GetChatsQuery['chats'][number]['messages'][number],
+    ): IUserCardMessage => {
+        return {
+            message: message.message,
+            date: new Date(Number(message.date)),
+            isOwner: currentUser?.getUser.id === message.user.id,
+        };
+    };
+
     return (
         <StyledMainView>
-            <p> Web chat: {version}</p>
-            <h3>{currentUser?.getUser.username}</h3>
-            <input
-                type="text"
-                placeholder="search friends"
-                value={searchUser}
-                onChange={handleSearchUsers}
-            />
             <StyledMainLayout>
-                <aside>
+                <StyledMainAside>
+                    <StyledMainAsideTopbar>
+                        <Menu menu={menuStructure} />
+                        <Input
+                            type="text"
+                            placeholder="Поиск по чатам"
+                            value={searchUser}
+                            onChange={handleSearchUsers}
+                            iconRight={SearchIcon}
+                        />
+                    </StyledMainAsideTopbar>
+
                     {searchUser &&
                         users?.findUsers.map((user) => (
-                            <UserCard
+                            <StyledChatCard
                                 username={user.username}
                                 key={user.id}
                                 active={user.id === activeUser?.id}
@@ -112,23 +161,22 @@ export const MainView: React.FC = () => {
                         ))}
                     {!searchUser &&
                         chats?.chats.map((chat) => (
-                            <ChatCardComponent
-                                chat={chat}
+                            <StyledChatCard
                                 key={chat.id}
+                                username={computeChatName(chat) || ''}
                                 active={activeChat?.id === chat.id}
                                 onClick={() => handleSetActiveChat(chat)}
+                                message={generateMessage(
+                                    chat.messages[chat.messages.length - 1],
+                                )}
                             />
                         ))}
-                </aside>
+                </StyledMainAside>
                 <section>
-                    {activeUser || activeChat ? (
-                        <ChatComponent
-                            activeUser={activeUser}
-                            activeChat={activeChat}
-                        />
-                    ) : (
-                        'Nothing here yet'
-                    )}
+                    <ChatComponent
+                        activeUser={activeUser}
+                        activeChat={activeChat}
+                    />
                 </section>
             </StyledMainLayout>
         </StyledMainView>

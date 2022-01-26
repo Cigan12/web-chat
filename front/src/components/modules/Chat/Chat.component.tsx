@@ -2,13 +2,26 @@ import React, { useEffect, useMemo } from 'react';
 import {
     FindUsersQuery,
     GetChatsQuery,
+    GetPrivateChatQuery,
     NewMessagesDocument,
     NewMessagesSubscription,
     useGetPrivateChatQuery,
+    useGetUserQuery,
     useSendMessageMutation,
 } from 'generated/graphql.types';
 import { useForm } from 'react-hook-form';
 import { useNotCurrentUser } from 'hooks/NotCurrentUser.hook';
+
+import {
+    StyledChat,
+    StyledChatContent,
+    StyledChatInput,
+    StyledChatInputContainer,
+    StyledChatInputTelegramIcon,
+    StyledChatMessage,
+    StyledChatName,
+    StyledChatTopBar,
+} from './Chat.component.styled';
 
 interface IChatComponentProps {
     activeUser: FindUsersQuery['findUsers'][number] | null;
@@ -30,6 +43,8 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
     activeChat,
 }) => {
     const chatUsers = activeChat?.users;
+    // CURRENT USER
+    const { data: currentUser, error: getUserError } = useGetUserQuery();
     const notCurrentUser = useNotCurrentUser(chatUsers);
 
     const contact = useMemo(() => {
@@ -94,24 +109,39 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
         reset();
     });
 
+    const isMessageOwner = (
+        message: NonNullable<
+            GetPrivateChatQuery['privateChat']
+        >['messages'][number],
+    ) => {
+        return currentUser?.getUser.id === message.user.id;
+    };
+
     return (
-        <div>
-            {contact?.username}
-            <div>
+        <StyledChat>
+            <StyledChatTopBar>
+                <StyledChatName>{contact?.username}</StyledChatName>
+            </StyledChatTopBar>
+            <StyledChatContent>
                 {data?.privateChat?.messages.map((message) => (
-                    <p key={message.id}>
-                        {message.message} {message.date}
-                    </p>
+                    <StyledChatMessage
+                        key={message.id}
+                        date={new Date(Number(message.date))}
+                        message={message.message}
+                        isOwner={isMessageOwner(message)}
+                    />
                 ))}
-            </div>
+            </StyledChatContent>
             <form onSubmit={onSubmit}>
-                <input
-                    type="text"
-                    placeholder="Message"
-                    {...register('message')}
-                />
-                <button type="submit">Send</button>
+                <StyledChatInputContainer>
+                    <StyledChatInput
+                        type="text"
+                        placeholder="Написать сообщение"
+                        {...register('message')}
+                    />
+                    <StyledChatInputTelegramIcon onClick={onSubmit} />
+                </StyledChatInputContainer>
             </form>
-        </div>
+        </StyledChat>
     );
 };
