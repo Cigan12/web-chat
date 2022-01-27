@@ -4,6 +4,9 @@ import {
 } from 'components/providers/NotificationModals/NotificationModals.provider';
 import { useSignUpMutation } from 'generated/graphql.types';
 import { useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import { Validators } from 'utils/helpers/ValidationErrrors.helper';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { ISignUpModalProps } from './SignUp.modal';
 
 interface ISignUpFields {
@@ -13,10 +16,21 @@ interface ISignUpFields {
     passwordRepeat: string;
 }
 
+const validationSchema = yup.object({
+    username: Validators.username,
+    email: Validators.email,
+    password: Validators.password,
+    passwordRepeat: Validators.passwordRepeat,
+});
+
 export const LSignUpView = (
     onOpenSignInModal: ISignUpModalProps['onOpenSignInModal'],
 ) => {
-    const { register, handleSubmit } = useForm<ISignUpFields>();
+    // const validationSchema = useYup
+
+    const { register, handleSubmit, formState } = useForm<ISignUpFields>({
+        resolver: yupResolver(validationSchema),
+    });
     const { toggleNotificationModal } = useNotificationModals();
     const [signUp] = useSignUpMutation();
     const onSubmit = handleSubmit(async (values) => {
@@ -42,5 +56,7 @@ export const LSignUpView = (
     return {
         onSubmit,
         register,
+        errors: formState.errors,
+        isNotAvailableForSubmit: !formState.isValid || formState.isSubmitting,
     };
 };

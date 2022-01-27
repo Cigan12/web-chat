@@ -38,6 +38,7 @@ export const StyledInputError = styled.span`
     top: 44px;
     font: ${({ theme }) => theme.fonts.i400f12l16};
     color: ${({ theme }) => theme.colors.red};
+    left: 0;
 `;
 
 export const StyledInputIconRight = styled.img`

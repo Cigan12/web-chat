@@ -1,6 +1,9 @@
 import { isAuthenticatedVar } from 'components/providers/Apollo/ApolloVariables.helper';
 import { useSignInMutation } from 'generated/graphql.types';
 import { useForm } from 'react-hook-form';
+import { Validators } from 'utils/helpers/ValidationErrrors.helper';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { ISignInModalProps } from './SignIn.modal';
 
 interface ISignInFields {
@@ -8,8 +11,15 @@ interface ISignInFields {
     password: string;
 }
 
+const validationSchema = yup.object({
+    login: Validators.email,
+    password: Validators.password,
+});
+
 export const LSignInLogic = (onClose: ISignInModalProps['onClose']) => {
-    const { register, handleSubmit } = useForm<ISignInFields>();
+    const { register, handleSubmit, formState } = useForm<ISignInFields>({
+        resolver: yupResolver(validationSchema),
+    });
     const [signIn] = useSignInMutation();
 
     const onSubmit = handleSubmit(async (values) => {
@@ -34,5 +44,7 @@ export const LSignInLogic = (onClose: ISignInModalProps['onClose']) => {
     return {
         onSubmit,
         register,
+        errors: formState.errors,
+        isNotAvailableForSubmit: !formState.isValid || formState.isSubmitting,
     };
 };

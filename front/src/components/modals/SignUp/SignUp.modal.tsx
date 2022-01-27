@@ -19,7 +19,8 @@ export interface ISignUpModalProps {
 export const SignUpModal: React.FC<ISignUpModalProps> = ({
     onOpenSignInModal,
 }) => {
-    const { onSubmit, register } = LSignUpView(onOpenSignInModal);
+    const { onSubmit, register, errors, isNotAvailableForSubmit } =
+        LSignUpView(onOpenSignInModal);
 
     return (
         <StyledModalOverlay>
@@ -33,6 +34,7 @@ export const SignUpModal: React.FC<ISignUpModalProps> = ({
                                 type="text"
                                 placeholder="Введите имя пользователя"
                                 {...register('username')}
+                                error={errors.username?.message}
                             />
                         </Label>
                         <Label>
@@ -41,27 +43,33 @@ export const SignUpModal: React.FC<ISignUpModalProps> = ({
                                 type="text"
                                 placeholder="Введите электронную почту"
                                 {...register('email')}
+                                error={errors.email?.message}
                             />
                         </Label>
                         <Label>
                             Пароль
                             <StyledAuthModalInput
-                                type="text"
+                                type="password"
                                 placeholder="Введите пароль"
                                 {...register('password')}
+                                error={errors.password?.message}
                             />
                         </Label>
 
                         <Label>
                             Подтвердите пароль
                             <StyledAuthModalInput
-                                type="text"
+                                type="password"
                                 placeholder="Введите пароль"
                                 {...register('passwordRepeat')}
+                                error={errors.passwordRepeat?.message}
                             />
                         </Label>
 
-                        <StyledAuthModalButton type="submit">
+                        <StyledAuthModalButton
+                            type="submit"
+                            disabled={isNotAvailableForSubmit}
+                        >
                             Зарегистрироваться
                         </StyledAuthModalButton>
                         <StyledAuthModalChangeModalButton

@@ -1,6 +1,7 @@
 import { Label } from 'components/forms/Label/Label.component';
 import React from 'react';
 import Logo from 'assets/logo.svg';
+
 import {
     StyledAuthModal,
     StyledAuthModalButton,
@@ -21,7 +22,8 @@ export const SignInModal: React.FC<ISignInModalProps> = ({
     onOpenRegisterModal,
     onClose,
 }) => {
-    const { onSubmit, register } = LSignInLogic(onClose);
+    const { onSubmit, register, errors, isNotAvailableForSubmit } =
+        LSignInLogic(onClose);
     return (
         <StyledModalOverlay>
             <StyledAuthModal>
@@ -34,19 +36,24 @@ export const SignInModal: React.FC<ISignInModalProps> = ({
                                 type="text"
                                 placeholder="Введите логин"
                                 {...register('login')}
+                                error={errors.login?.message}
                             />
                         </Label>
 
                         <Label>
                             Введите пароль
                             <StyledAuthModalInput
-                                type="text"
+                                type="password"
                                 placeholder="Введите пароль"
                                 {...register('password')}
+                                error={errors.password?.message}
                             />
                         </Label>
 
-                        <StyledAuthModalButton type="submit">
+                        <StyledAuthModalButton
+                            type="submit"
+                            disabled={isNotAvailableForSubmit}
+                        >
                             Войти
                         </StyledAuthModalButton>
                         <StyledAuthModalChangeModalButton
