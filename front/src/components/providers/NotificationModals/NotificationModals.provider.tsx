@@ -1,6 +1,6 @@
 import { NotificationModal } from 'components/modals/NotificationModal/NotificationModal.component';
 import React, { createContext, useContext, useState } from 'react';
-import { noop } from 'utils/SmallHelpers/noop.helper';
+import { noop } from 'utils/helpers/SmallHelpers/noop.helper';
 
 export enum ENotificationModalType {
     ERROR = 'ERROR',

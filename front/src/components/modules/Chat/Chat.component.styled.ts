@@ -48,6 +48,10 @@ export const StyledChatInput = styled.input`
     ::placeholder {
         color: ${({ theme }) => theme.colors.gray};
     }
+
+    :focus-visible {
+        outline: none;
+    }
 `;
 
 export const StyledChatInputTelegramIcon = styled(TelegramIcon)`

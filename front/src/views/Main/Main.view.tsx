@@ -4,24 +4,21 @@ import {
     GetChatsQuery,
     NewChatCreatedDocument,
     NewChatCreatedSubscription,
-    useFindUsersQuery,
-    useGetChatsQuery,
-    useGetUserQuery,
+    useFindUsersLazyQuery,
+    useGetChatsLazyQuery,
+    useGetUserLazyQuery,
 } from 'generated/graphql.types';
-import {
-    IUserCardMessage,
-    UserCard,
-} from 'components/cards/UserCard/UserCard.component';
+import { IUserCardMessage } from 'components/cards/UserCard/UserCard.component';
 import { ChatComponent } from 'components/modules/Chat/Chat.component';
 import { useHandleErrors } from 'hooks/errors/HandleErrors.hook';
 import { Input } from 'components/forms/Input/Input.component';
 import SearchIcon from 'assets/small/search.svg';
 import { IMenuItem, Menu } from 'components/ui/Menu/Menu.component';
 import ExitIcon from 'assets/small/exit.svg';
-import {
-    ENotificationModalType,
-    useNotificationModals,
-} from 'components/providers/NotificationModals/NotificationModals.provider';
+import { checkIsTokenExpired } from 'utils/helpers/SmallHelpers/tokenValidation.helper';
+import { useAuthModals } from 'components/providers/AuthModals/AuthModals.provider';
+import { useApolloClient, useReactiveVar } from '@apollo/client';
+import { isAuthenticatedVar } from 'components/providers/Apollo/ApolloVariables.helper';
 import {
     StyledChatCard,
     StyledMainAside,
@@ -37,34 +34,49 @@ interface ISubscriptionData {
 }
 
 export const MainView: React.FC = () => {
+    const isAuth = useReactiveVar(isAuthenticatedVar);
+    // APOLLO CLIENT
+    const client = useApolloClient();
+    // MODALS
+    const { openSignInModal } = useAuthModals();
+
+    // QUERIES
     // CURRENT USER
-    const { data: currentUser, error: getUserError } = useGetUserQuery();
+    const [getUser, { data: currentUser, error: getUserError }] =
+        useGetUserLazyQuery();
 
     const getUserErrors = getUserError?.graphQLErrors || [];
 
-    const { toggleNotificationModal } = useNotificationModals();
-
-    // QUERIES
-    const {
-        data: chats,
-        subscribeToMore,
-        error: getChatsError,
-    } = useGetChatsQuery();
+    // USER CHATS
+    const [getChats, { data: chats, subscribeToMore, error: getChatsError }] =
+        useGetChatsLazyQuery();
 
     const getChatsErrors = getChatsError?.graphQLErrors || [];
 
-    const { data: users, refetch, error: findUsersError } = useFindUsersQuery();
+    const [, { data: users, refetch, error: findUsersError }] =
+        useFindUsersLazyQuery();
 
     const findUserErrors = findUsersError?.graphQLErrors || [];
 
     useHandleErrors([...getUserErrors, ...getChatsErrors, ...findUserErrors]);
 
     useEffect(() => {
-        toggleNotificationModal({
-            text: 'Письмо для подтверждения отправлено Вам на почту ',
-            type: ENotificationModalType.INFO,
-        });
-        subscribeToMore({
+        const refresh = localStorage.getItem('refresh_token');
+
+        if (isAuth) {
+            getChats();
+            getUser();
+        }
+
+        if (!refresh || checkIsTokenExpired(refresh)) {
+            openSignInModal();
+        } else {
+            isAuthenticatedVar(true);
+        }
+    }, [isAuth]);
+
+    useEffect(() => {
+        subscribeToMore?.({
             document: NewChatCreatedDocument,
             updateQuery: (prev, { subscriptionData }: ISubscriptionData) => {
                 if (!subscriptionData.data) {
@@ -105,20 +117,25 @@ export const MainView: React.FC = () => {
     const handleSearchUsers: React.ChangeEventHandler<HTMLInputElement> =
         async (e) => {
             setSearchUser(e.target.value);
-            await refetch({
+            await refetch?.({
                 username: e.target.value,
             });
         };
 
-    // MENU STRUCTURE
+    const handleLogout = () => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        client.resetStore();
+        isAuthenticatedVar(false);
+        openSignInModal();
+    };
 
+    // MENU STRUCTURE
     const menuStructure: Array<IMenuItem> = [
         {
             alt: 'exit icon',
             iconSrc: ExitIcon,
-            onClick: () => {
-                console.log('logout');
-            },
+            onClick: handleLogout,
             text: 'Выйти',
         },
     ];

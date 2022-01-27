@@ -13,6 +13,8 @@ import { getMainDefinition } from '@apollo/client/utilities';
 import { onError } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
 import { RefreshMutation } from 'generated/graphql.types';
+import { checkIsTokenExpired } from 'utils/helpers/SmallHelpers/tokenValidation.helper';
+import { isAuthenticatedVar } from './ApolloVariables.helper';
 
 interface IApolloProviderProps {
     children: React.ReactNode;
@@ -54,7 +56,7 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
             const refresh_token = localStorage.getItem('refresh_token');
             if (access_token) {
                 if (
-                    isAccessExpired(access_token) &&
+                    checkIsTokenExpired(access_token) &&
                     operation.operationName !== 'Refresh'
                 ) {
                     const newTokens = await refresh();
@@ -123,7 +125,20 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
 
         const client = new ApolloClient({
             link: from([authLink, errorLink, splitLink]),
-            cache: new InMemoryCache(),
+            cache: new InMemoryCache({
+                typePolicies: {
+                    Query: {
+                        fields: {
+                            getUser(prev) {
+                                return {
+                                    ...prev,
+                                    isAuth: isAuthenticatedVar(),
+                                };
+                            },
+                        },
+                    },
+                },
+            }),
         });
 
         const refresh = async () => {
@@ -131,13 +146,6 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
                 mutation: refreshMutation,
             });
             return data?.refresh;
-        };
-
-        const isAccessExpired = (access_token: string) => {
-            const splitted = access_token.split('.');
-            const payload = JSON.parse(window.atob(splitted[1]));
-
-            return new Date(payload.exp * 1000) < new Date();
         };
 
         return <ApolloProvider client={client}>{children}</ApolloProvider>;

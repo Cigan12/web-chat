@@ -71,23 +71,19 @@ export class ChatService {
     }
 
     async getPrivateChat(user: User, userId: number) {
-        const chat = await this.chatRepository
-            .createQueryBuilder('chat')
-            .leftJoinAndSelect('chat.messages', 'message')
-            .leftJoinAndSelect('message.user', 'messageUser')
-            .leftJoinAndSelect('chat.users', 'user')
-            .where('user.id = :id', {
-                id: user.id,
-            })
-            .andWhere('user.id = :id', {
-                id: userId,
-            })
-            .getOne();
         console.log(
-            '🚀 ~ file: chat.service.ts ~ line 86 ~ ChatService ~ getPrivateChat ~ chat',
-            chat,
+            '🚀 ~ file: chat.service.ts ~ line 74 ~ ChatService ~ getPrivateChat ~ userId',
+            userId,
         );
-        return chat;
+        console.log(
+            '🚀 ~ file: chat.service.ts ~ line 74 ~ ChatService ~ getPrivateChat ~ user',
+            user,
+        );
+        const chats = await this.getChats(user);
+        const matchingChat = chats.find((chat) =>
+            Boolean(chat.users.find((chatUser) => chatUser.id === userId)),
+        );
+        return matchingChat;
     }
 
     // SUBSCRIPTIONS

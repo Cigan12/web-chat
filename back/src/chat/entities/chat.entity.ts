@@ -20,6 +20,7 @@ export class Chat extends BaseEntity {
 
     @ManyToMany(() => User, (user) => user.chats, {
         eager: true,
+        cascade: true,
     })
     users: User[];
 

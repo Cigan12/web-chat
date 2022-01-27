@@ -8,6 +8,10 @@ import { EChatTypes } from '../types/chat-types.enum';
 @EntityRepository(Chat)
 export class ChatRepository extends Repository<Chat> {
     async createPrivateChat(users: User[]) {
+        console.log(
+            '🚀 ~ file: chats.repository.ts ~ line 11 ~ ChatRepository ~ createPrivateChat ~ users',
+            users,
+        );
         const chat = new Chat();
         chat.type = EChatTypes.private;
         chat.users = users;

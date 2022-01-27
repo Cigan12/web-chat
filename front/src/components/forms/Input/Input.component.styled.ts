@@ -21,6 +21,11 @@ export const StyledInputElement = styled.input<IStyledInputElementProps>`
     color: ${({ theme }) => theme.colors.textBlack};
     :focus {
         border-color: ${({ theme }) => theme.colors.blue};
+        outline: none;
+    }
+
+    :focus-visible {
+        outline: none;
     }
 
     ::placeholder {

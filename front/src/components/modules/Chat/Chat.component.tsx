@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
     FindUsersQuery,
     GetChatsQuery,
@@ -43,6 +43,7 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
     activeChat,
 }) => {
     const chatUsers = activeChat?.users;
+    const chatRef = useRef<HTMLDivElement>(null);
     // CURRENT USER
     const { data: currentUser, error: getUserError } = useGetUserQuery();
     const notCurrentUser = useNotCurrentUser(chatUsers);
@@ -72,6 +73,7 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
                 if (!subscriptionData.data) return prev;
 
                 const newMessage = subscriptionData.data.messageSent;
+
                 if (prev.privateChat) {
                     return {
                         ...prev,
@@ -87,6 +89,10 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
             },
         });
     }, []);
+
+    useEffect(() => {
+        chatRef.current?.scrollTo(0, chatRef.current?.scrollHeight);
+    }, [data?.privateChat?.messages]);
 
     // MESSAGE SENDING STUFF
     const [sendMessage] = useSendMessageMutation();
@@ -122,7 +128,7 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
             <StyledChatTopBar>
                 <StyledChatName>{contact?.username}</StyledChatName>
             </StyledChatTopBar>
-            <StyledChatContent>
+            <StyledChatContent ref={chatRef}>
                 {data?.privateChat?.messages.map((message) => (
                     <StyledChatMessage
                         key={message.id}
@@ -135,6 +141,7 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
             <form onSubmit={onSubmit}>
                 <StyledChatInputContainer>
                     <StyledChatInput
+                        autoComplete="off"
                         type="text"
                         placeholder="Написать сообщение"
                         {...register('message')}

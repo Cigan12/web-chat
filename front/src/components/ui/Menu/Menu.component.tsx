@@ -61,7 +61,10 @@ export const Menu: React.FC<IMenuProps> = ({ menu }) => {
                     {menu.map((menuItem) => (
                         <StyledDropdownItem
                             key={menuItem.text}
-                            onClick={menuItem.onClick}
+                            onClick={() => {
+                                menuItem.onClick();
+                                toggleDropdown();
+                            }}
                         >
                             <img src={menuItem.iconSrc} alt={menuItem.alt} />{' '}
                             {menuItem.text}

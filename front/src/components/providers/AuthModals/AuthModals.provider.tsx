@@ -1,7 +1,7 @@
 import { SignInModal } from 'components/modals/SignIn/SignIn.modal';
 import { SignUpModal } from 'components/modals/SignUp/SignUp.modal';
 import React, { createContext, useCallback, useContext, useState } from 'react';
-import { noop } from 'utils/SmallHelpers/noop.helper';
+import { noop } from 'utils/helpers/SmallHelpers/noop.helper';
 
 const initialContextValue: IAuthModalsContext = {
     toggleSignInModal: noop,

@@ -1,19 +1,12 @@
-import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
-
-const MainView = React.lazy(() =>
-    import('./views/Main/Main.view').then(({ MainView }) => ({
-        default: MainView,
-    })),
-);
+import React from 'react';
+import { Switch, Route } from 'react-router-dom';
+import { MainView } from 'views/Main/Main.view';
 
 export const App: React.FC = () => (
     <div>
         <Switch>
             <Route path="/" exact>
-                <Suspense fallback="loading">
-                    <MainView />
-                </Suspense>
+                <MainView />
             </Route>
         </Switch>
     </div>

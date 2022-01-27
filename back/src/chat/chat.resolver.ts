@@ -16,10 +16,10 @@ import { ChatModel } from './models/chat.model';
 import { MessageModel } from './models/message.model';
 
 @Resolver()
-@UseGuards(JwtAuthGuard)
 export class ChatResolver {
     constructor(private chatService: ChatService) {}
 
+    @UseGuards(JwtAuthGuard)
     @Mutation(() => ChatModel)
     async createPrivateChat(
         @GetUser() user: User,
@@ -28,6 +28,7 @@ export class ChatResolver {
         return await this.chatService.createPrivateChat(user, contactId);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Query(() => [ChatModel])
     async chats(@GetUser() user: User) {
         return await this.chatService.getChats(user);
@@ -43,6 +44,7 @@ export class ChatResolver {
         return this.chatService.newChatCreated();
     }
 
+    @UseGuards(JwtAuthGuard)
     @Mutation(() => MessageModel)
     async sendMessage(
         @GetUser() user: User,
@@ -54,6 +56,7 @@ export class ChatResolver {
         return message;
     }
 
+    @UseGuards(JwtAuthGuard)
     @Query(() => ChatModel, {
         nullable: true,
     })

@@ -1,3 +1,4 @@
+import { isAuthenticatedVar } from 'components/providers/Apollo/ApolloVariables.helper';
 import { useSignInMutation } from 'generated/graphql.types';
 import { useForm } from 'react-hook-form';
 import { ISignInModalProps } from './SignIn.modal';
@@ -25,6 +26,7 @@ export const LSignInLogic = (onClose: ISignInModalProps['onClose']) => {
             const { access_token, refresh_token } = result.data?.signin;
             localStorage.setItem('access_token', access_token);
             localStorage.setItem('refresh_token', refresh_token);
+            isAuthenticatedVar(true);
             onClose();
         }
     });

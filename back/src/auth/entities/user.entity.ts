@@ -24,9 +24,7 @@ export class User extends BaseEntity {
     @Column()
     password: string;
 
-    @ManyToMany(() => Chat, (chat) => chat.users, {
-        cascade: true,
-    })
+    @ManyToMany(() => Chat, (chat) => chat.users)
     @JoinTable()
     chats: Chat[];
 

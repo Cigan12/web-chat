@@ -1,3 +1,7 @@
+import {
+    ENotificationModalType,
+    useNotificationModals,
+} from 'components/providers/NotificationModals/NotificationModals.provider';
 import { useSignUpMutation } from 'generated/graphql.types';
 import { useForm } from 'react-hook-form';
 import { ISignUpModalProps } from './SignUp.modal';
@@ -13,6 +17,7 @@ export const LSignUpView = (
     onOpenSignInModal: ISignUpModalProps['onOpenSignInModal'],
 ) => {
     const { register, handleSubmit } = useForm<ISignUpFields>();
+    const { toggleNotificationModal } = useNotificationModals();
     const [signUp] = useSignUpMutation();
     const onSubmit = handleSubmit(async (values) => {
         const result = await signUp({
@@ -26,6 +31,10 @@ export const LSignUpView = (
         });
 
         if (result.data?.signup) {
+            toggleNotificationModal({
+                text: 'Письмо для подтверждения отправлено Вам на почту ',
+                type: ENotificationModalType.INFO,
+            });
             onOpenSignInModal();
         }
     });
