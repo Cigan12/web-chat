@@ -91,7 +91,14 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
     }, []);
 
     useEffect(() => {
-        chatRef.current?.scrollTo(0, chatRef.current?.scrollHeight);
+        const newMessageUserId =
+            data?.privateChat &&
+            data.privateChat.messages[data.privateChat.messages.length - 1].user
+                .id;
+
+        if (newMessageUserId === currentUser?.getUser.id) {
+            chatRef.current?.scrollTo(0, chatRef.current?.scrollHeight);
+        }
     }, [data?.privateChat?.messages]);
 
     // MESSAGE SENDING STUFF
