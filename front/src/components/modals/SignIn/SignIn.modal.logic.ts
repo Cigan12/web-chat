@@ -19,6 +19,7 @@ const validationSchema = yup.object({
 export const LSignInLogic = (onClose: ISignInModalProps['onClose']) => {
     const { register, handleSubmit, formState } = useForm<ISignInFields>({
         resolver: yupResolver(validationSchema),
+        mode: 'onChange',
     });
     const [signIn] = useSignInMutation();
 

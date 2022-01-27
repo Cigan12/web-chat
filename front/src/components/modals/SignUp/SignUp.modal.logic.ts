@@ -26,10 +26,9 @@ const validationSchema = yup.object({
 export const LSignUpView = (
     onOpenSignInModal: ISignUpModalProps['onOpenSignInModal'],
 ) => {
-    // const validationSchema = useYup
-
     const { register, handleSubmit, formState } = useForm<ISignUpFields>({
         resolver: yupResolver(validationSchema),
+        mode: 'onChange',
     });
     const { toggleNotificationModal } = useNotificationModals();
     const [signUp] = useSignUpMutation();
