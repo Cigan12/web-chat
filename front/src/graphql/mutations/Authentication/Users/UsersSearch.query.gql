@@ -1,7 +1,0 @@
-query FindUsers($username: String) {
-    findUsers(username: $username) {
-        id
-        username
-        email
-    }
-}

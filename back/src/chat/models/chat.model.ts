@@ -6,8 +6,11 @@ import { MessageModel } from './message.model';
 
 @ObjectType()
 export class ChatModel {
-    @Field(() => Int)
+    @Field(() => Int, { nullable: true })
     id: number;
+
+    @Field(() => String)
+    name: string;
 
     @Field(() => String)
     type: EChatTypes;

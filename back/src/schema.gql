@@ -16,7 +16,8 @@ type MessageModel {
 }
 
 type ChatModel {
-  id: Int!
+  id: Int
+  name: String!
   type: String!
   messages: [MessageModel!]!
   users: [UserModel!]!
@@ -28,18 +29,15 @@ type TokensModel {
 }
 
 type Query {
-  findUsers(username: String): [UserModel!]!
   getUser: UserModel!
-  chats: [ChatModel!]!
-  privateChat(contactId: Int!): ChatModel
+  chats(search: String): [ChatModel!]!
 }
 
 type Mutation {
   signup(signUpInput: SignUpInput!): Boolean!
   refresh: TokensModel!
   signin(signInInput: SignInInput!): TokensModel!
-  createPrivateChat(contactId: Int!): ChatModel!
-  sendMessage(input: SendMessageInput!): MessageModel!
+  sendMessage(input: SendMessageInput!): Boolean!
 }
 
 input SignUpInput {
@@ -60,6 +58,6 @@ input SendMessageInput {
 }
 
 type Subscription {
-  messageSent: MessageModel!
   newChatCreated: ChatModel!
+  chatUpdated: ChatModel!
 }

@@ -1,5 +1,5 @@
-query GetChats($search: String) {
-    chats(search: $search) {
+subscription ChatUpdated {
+    chatUpdated {
         name
         id
         type
@@ -12,7 +12,6 @@ query GetChats($search: String) {
             id
             date
             message
-
             user {
                 id
                 email

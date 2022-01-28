@@ -7,14 +7,28 @@ import { EChatTypes } from '../types/chat-types.enum';
 
 @EntityRepository(Chat)
 export class ChatRepository extends Repository<Chat> {
-    async createPrivateChat(users: User[]) {
-        console.log(
-            '🚀 ~ file: chats.repository.ts ~ line 11 ~ ChatRepository ~ createPrivateChat ~ users',
-            users,
-        );
+    async createPrivateChat(
+        users: User[],
+        message: SendMessageInput['message'],
+        user: User,
+    ) {
         const chat = new Chat();
         chat.type = EChatTypes.private;
         chat.users = users;
+        const newMessage = new Message();
+        newMessage.user = user;
+        newMessage.date = new Date();
+        newMessage.message = message;
+        console.log(
+            '🚀 ~ file: chats.repository.ts ~ line 22 ~ ChatRepository ~ newMessage',
+            newMessage,
+        );
+
+        chat.messages = [newMessage];
+        console.log(
+            '🚀 ~ file: chats.repository.ts ~ line 29 ~ ChatRepository ~ chat',
+            chat,
+        );
         return await chat.save();
     }
 
@@ -31,7 +45,6 @@ export class ChatRepository extends Repository<Chat> {
         message.date = new Date();
         message.message = messageInput.message;
         chat.messages.push(message);
-        await chat.save();
-        return message;
+        return await chat.save();
     }
 }

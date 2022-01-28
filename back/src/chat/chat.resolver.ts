@@ -1,70 +1,74 @@
 import { UseGuards } from '@nestjs/common';
-import {
-    Mutation,
-    Resolver,
-    Subscription,
-    Query,
-    Args,
-    Int,
-} from '@nestjs/graphql';
+import { Mutation, Resolver, Subscription, Query, Args } from '@nestjs/graphql';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
 import { User } from 'src/auth/entities/user.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ChatService } from './chat.service';
 import { SendMessageInput } from './inputs/send-message.input';
 import { ChatModel } from './models/chat.model';
-import { MessageModel } from './models/message.model';
 
 @Resolver()
 export class ChatResolver {
     constructor(private chatService: ChatService) {}
 
     @UseGuards(JwtAuthGuard)
-    @Mutation(() => ChatModel)
-    async createPrivateChat(
+    @Query(() => [ChatModel])
+    async chats(
         @GetUser() user: User,
-        @Args({ name: 'contactId', type: () => Int }) contactId: number,
+        @Args('search', { nullable: true }) search?: string,
     ) {
-        return await this.chatService.createPrivateChat(user, contactId);
+        return await this.chatService.getChats(user, search);
     }
 
     @UseGuards(JwtAuthGuard)
-    @Query(() => [ChatModel])
-    async chats(@GetUser() user: User) {
-        return await this.chatService.getChats(user);
-    }
-
-    @Subscription(() => MessageModel)
-    messageSent() {
-        return this.chatService.messageSent();
-    }
-
-    @Subscription(() => ChatModel)
+    @Subscription(() => ChatModel, {
+        filter: (payload, value, context) => {
+            if (context?.req?.user) {
+                const currentUser = context?.req?.user;
+                return (
+                    Boolean(
+                        payload.newChatCreated.users.find(
+                            (user) => currentUser.id === user.id,
+                        ),
+                    ) && payload.newChatCreated.name != currentUser.username
+                );
+            }
+            return false;
+        },
+    })
     newChatCreated() {
         return this.chatService.newChatCreated();
     }
 
     @UseGuards(JwtAuthGuard)
-    @Mutation(() => MessageModel)
+    @Subscription(() => ChatModel, {
+        filter: (payload, value, context) => {
+            if (context?.req?.user) {
+                const currentUser = context?.req?.user;
+                return (
+                    Boolean(
+                        payload.chatUpdated.users.find(
+                            (user) => currentUser.id === user.id,
+                        ),
+                    ) && payload.chatUpdated.name != currentUser.username
+                );
+            }
+            return false;
+        },
+    })
+    chatUpdated() {
+        return this.chatService.chatUpdated();
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Mutation(() => Boolean)
     async sendMessage(
         @GetUser() user: User,
         @Args({ name: 'input', type: () => SendMessageInput })
         input: SendMessageInput,
     ) {
-        const message = await this.chatService.sendMessage(user, input);
+        const chat = await this.chatService.sendMessage(user, input);
 
-        return message;
-    }
-
-    @UseGuards(JwtAuthGuard)
-    @Query(() => ChatModel, {
-        nullable: true,
-    })
-    async privateChat(
-        @GetUser() user: User,
-        @Args({ name: 'contactId', type: () => Int })
-        contactId: number,
-    ) {
-        return await this.chatService.getPrivateChat(user, contactId);
+        return Boolean(chat);
     }
 }

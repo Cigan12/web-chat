@@ -16,8 +16,9 @@ export type Scalars = {
 
 export type ChatModel = {
   __typename?: 'ChatModel';
-  id: Scalars['Int'];
+  id?: Maybe<Scalars['Int']>;
   messages: Array<MessageModel>;
+  name: Scalars['String'];
   type: Scalars['String'];
   users: Array<UserModel>;
 };
@@ -32,16 +33,10 @@ export type MessageModel = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  createPrivateChat: ChatModel;
   refresh: TokensModel;
-  sendMessage: MessageModel;
+  sendMessage: Scalars['Boolean'];
   signin: TokensModel;
   signup: Scalars['Boolean'];
-};
-
-
-export type MutationCreatePrivateChatArgs = {
-  contactId: Scalars['Int'];
 };
 
 
@@ -62,14 +57,13 @@ export type MutationSignupArgs = {
 export type Query = {
   __typename?: 'Query';
   chats: Array<ChatModel>;
-  findUsers: Array<UserModel>;
   getUser: UserModel;
   privateChat?: Maybe<ChatModel>;
 };
 
 
-export type QueryFindUsersArgs = {
-  username?: Maybe<Scalars['String']>;
+export type QueryChatsArgs = {
+  search?: Maybe<Scalars['String']>;
 };
 
 
@@ -96,7 +90,7 @@ export type SignUpInput = {
 
 export type Subscription = {
   __typename?: 'Subscription';
-  messageSent: MessageModel;
+  chatUpdated: ChatModel;
   newChatCreated: ChatModel;
 };
 
@@ -132,46 +126,41 @@ export type SignUpMutationVariables = Exact<{
 
 export type SignUpMutation = { __typename?: 'Mutation', signup: boolean };
 
-export type FindUsersQueryVariables = Exact<{
-  username?: Maybe<Scalars['String']>;
-}>;
-
-
-export type FindUsersQuery = { __typename?: 'Query', findUsers: Array<{ __typename?: 'UserModel', id: number, username: string, email: string }> };
-
 export type SendMessageMutationVariables = Exact<{
   input: SendMessageInput;
 }>;
 
 
-export type SendMessageMutation = { __typename?: 'Mutation', sendMessage: { __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number } } };
+export type SendMessageMutation = { __typename?: 'Mutation', sendMessage: boolean };
 
-export type GetChatsQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetChatsQueryVariables = Exact<{
+  search?: Maybe<Scalars['String']>;
+}>;
 
 
-export type GetChatsQuery = { __typename?: 'Query', chats: Array<{ __typename?: 'ChatModel', id: number, type: string, users: Array<{ __typename?: 'UserModel', id: number, email: string, username: string }>, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number, email: string, username: string } }> }> };
+export type GetChatsQuery = { __typename?: 'Query', chats: Array<{ __typename?: 'ChatModel', name: string, id?: number | null | undefined, type: string, users: Array<{ __typename?: 'UserModel', id: number, email: string, username: string }>, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number, email: string, username: string } }> }> };
 
 export type GetPrivateChatQueryVariables = Exact<{
   contactId: Scalars['Int'];
 }>;
 
 
-export type GetPrivateChatQuery = { __typename?: 'Query', privateChat?: { __typename?: 'ChatModel', id: number, type: string, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number } }> } | null | undefined };
+export type GetPrivateChatQuery = { __typename?: 'Query', privateChat?: { __typename?: 'ChatModel', name: string, id?: number | null | undefined, type: string, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number } }> } | null | undefined };
 
 export type GetUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetUserQuery = { __typename?: 'Query', getUser: { __typename?: 'UserModel', id: number, username: string, email: string } };
 
+export type ChatUpdatedSubscriptionVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ChatUpdatedSubscription = { __typename?: 'Subscription', chatUpdated: { __typename?: 'ChatModel', name: string, id?: number | null | undefined, type: string, users: Array<{ __typename?: 'UserModel', id: number, email: string, username: string }>, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number, email: string, username: string } }> } };
+
 export type NewChatCreatedSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
 
-export type NewChatCreatedSubscription = { __typename?: 'Subscription', newChatCreated: { __typename?: 'ChatModel', id: number, type: string, users: Array<{ __typename?: 'UserModel', id: number, email: string, username: string }>, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number, email: string, username: string } }> } };
-
-export type NewMessagesSubscriptionVariables = Exact<{ [key: string]: never; }>;
-
-
-export type NewMessagesSubscription = { __typename?: 'Subscription', messageSent: { __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number } } };
+export type NewChatCreatedSubscription = { __typename?: 'Subscription', newChatCreated: { __typename?: 'ChatModel', name: string, id?: number | null | undefined, type: string, users: Array<{ __typename?: 'UserModel', id: number, email: string, username: string }>, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number, email: string, username: string } }> } };
 
 
 export const RefreshDocument = gql`
@@ -272,53 +261,9 @@ export function useSignUpMutation(baseOptions?: Apollo.MutationHookOptions<SignU
 export type SignUpMutationHookResult = ReturnType<typeof useSignUpMutation>;
 export type SignUpMutationResult = Apollo.MutationResult<SignUpMutation>;
 export type SignUpMutationOptions = Apollo.BaseMutationOptions<SignUpMutation, SignUpMutationVariables>;
-export const FindUsersDocument = gql`
-    query FindUsers($username: String) {
-  findUsers(username: $username) {
-    id
-    username
-    email
-  }
-}
-    `;
-
-/**
- * __useFindUsersQuery__
- *
- * To run a query within a React component, call `useFindUsersQuery` and pass it any options that fit your needs.
- * When your component renders, `useFindUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useFindUsersQuery({
- *   variables: {
- *      username: // value for 'username'
- *   },
- * });
- */
-export function useFindUsersQuery(baseOptions?: Apollo.QueryHookOptions<FindUsersQuery, FindUsersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<FindUsersQuery, FindUsersQueryVariables>(FindUsersDocument, options);
-      }
-export function useFindUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FindUsersQuery, FindUsersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<FindUsersQuery, FindUsersQueryVariables>(FindUsersDocument, options);
-        }
-export type FindUsersQueryHookResult = ReturnType<typeof useFindUsersQuery>;
-export type FindUsersLazyQueryHookResult = ReturnType<typeof useFindUsersLazyQuery>;
-export type FindUsersQueryResult = Apollo.QueryResult<FindUsersQuery, FindUsersQueryVariables>;
 export const SendMessageDocument = gql`
     mutation sendMessage($input: SendMessageInput!) {
-  sendMessage(input: $input) {
-    id
-    date
-    message
-    user {
-      id
-    }
-  }
+  sendMessage(input: $input)
 }
     `;
 export type SendMessageMutationFn = Apollo.MutationFunction<SendMessageMutation, SendMessageMutationVariables>;
@@ -348,8 +293,9 @@ export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMuta
 export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
 export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
 export const GetChatsDocument = gql`
-    query GetChats {
-  chats {
+    query GetChats($search: String) {
+  chats(search: $search) {
+    name
     id
     type
     users {
@@ -383,6 +329,7 @@ export const GetChatsDocument = gql`
  * @example
  * const { data, loading, error } = useGetChatsQuery({
  *   variables: {
+ *      search: // value for 'search'
  *   },
  * });
  */
@@ -400,6 +347,7 @@ export type GetChatsQueryResult = Apollo.QueryResult<GetChatsQuery, GetChatsQuer
 export const GetPrivateChatDocument = gql`
     query GetPrivateChat($contactId: Int!) {
   privateChat(contactId: $contactId) {
+    name
     id
     type
     messages {
@@ -477,9 +425,56 @@ export function useGetUserLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ge
 export type GetUserQueryHookResult = ReturnType<typeof useGetUserQuery>;
 export type GetUserLazyQueryHookResult = ReturnType<typeof useGetUserLazyQuery>;
 export type GetUserQueryResult = Apollo.QueryResult<GetUserQuery, GetUserQueryVariables>;
+export const ChatUpdatedDocument = gql`
+    subscription ChatUpdated {
+  chatUpdated {
+    name
+    id
+    type
+    users {
+      id
+      email
+      username
+    }
+    messages {
+      id
+      date
+      message
+      user {
+        id
+        email
+        username
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useChatUpdatedSubscription__
+ *
+ * To run a query within a React component, call `useChatUpdatedSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useChatUpdatedSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useChatUpdatedSubscription({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useChatUpdatedSubscription(baseOptions?: Apollo.SubscriptionHookOptions<ChatUpdatedSubscription, ChatUpdatedSubscriptionVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<ChatUpdatedSubscription, ChatUpdatedSubscriptionVariables>(ChatUpdatedDocument, options);
+      }
+export type ChatUpdatedSubscriptionHookResult = ReturnType<typeof useChatUpdatedSubscription>;
+export type ChatUpdatedSubscriptionResult = Apollo.SubscriptionResult<ChatUpdatedSubscription>;
 export const NewChatCreatedDocument = gql`
     subscription NewChatCreated {
   newChatCreated {
+    name
     id
     type
     users {
@@ -522,37 +517,3 @@ export function useNewChatCreatedSubscription(baseOptions?: Apollo.SubscriptionH
       }
 export type NewChatCreatedSubscriptionHookResult = ReturnType<typeof useNewChatCreatedSubscription>;
 export type NewChatCreatedSubscriptionResult = Apollo.SubscriptionResult<NewChatCreatedSubscription>;
-export const NewMessagesDocument = gql`
-    subscription NewMessages {
-  messageSent {
-    id
-    date
-    message
-    user {
-      id
-    }
-  }
-}
-    `;
-
-/**
- * __useNewMessagesSubscription__
- *
- * To run a query within a React component, call `useNewMessagesSubscription` and pass it any options that fit your needs.
- * When your component renders, `useNewMessagesSubscription` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useNewMessagesSubscription({
- *   variables: {
- *   },
- * });
- */
-export function useNewMessagesSubscription(baseOptions?: Apollo.SubscriptionHookOptions<NewMessagesSubscription, NewMessagesSubscriptionVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useSubscription<NewMessagesSubscription, NewMessagesSubscriptionVariables>(NewMessagesDocument, options);
-      }
-export type NewMessagesSubscriptionHookResult = ReturnType<typeof useNewMessagesSubscription>;
-export type NewMessagesSubscriptionResult = Apollo.SubscriptionResult<NewMessagesSubscription>;

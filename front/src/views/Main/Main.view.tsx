@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
-    FindUsersQuery,
+    ChatUpdatedDocument,
     GetChatsQuery,
     NewChatCreatedDocument,
     NewChatCreatedSubscription,
-    useFindUsersLazyQuery,
     useGetChatsLazyQuery,
     useGetUserLazyQuery,
 } from 'generated/graphql.types';
@@ -48,17 +47,19 @@ export const MainView: React.FC = () => {
     const getUserErrors = getUserError?.graphQLErrors || [];
 
     // USER CHATS
-    const [getChats, { data: chats, subscribeToMore, error: getChatsError }] =
-        useGetChatsLazyQuery();
+    const [
+        getChats,
+        {
+            data: chats,
+            subscribeToMore,
+            error: getChatsError,
+            refetch: refetchChats,
+        },
+    ] = useGetChatsLazyQuery();
 
     const getChatsErrors = getChatsError?.graphQLErrors || [];
 
-    const [, { data: users, refetch, error: findUsersError }] =
-        useFindUsersLazyQuery();
-
-    const findUserErrors = findUsersError?.graphQLErrors || [];
-
-    useHandleErrors([...getUserErrors, ...getChatsErrors, ...findUserErrors]);
+    useHandleErrors([...getUserErrors, ...getChatsErrors]);
 
     useEffect(() => {
         const refresh = localStorage.getItem('refresh_token');
@@ -76,39 +77,78 @@ export const MainView: React.FC = () => {
     }, [isAuth]);
 
     useEffect(() => {
-        subscribeToMore?.({
-            document: NewChatCreatedDocument,
-            updateQuery: (prev, { subscriptionData }: ISubscriptionData) => {
-                if (!subscriptionData.data) {
-                    return prev;
-                }
+        if (subscribeToMore && isAuth) {
+            subscribeToMore({
+                document: NewChatCreatedDocument,
+                updateQuery: (
+                    prev,
+                    { subscriptionData }: ISubscriptionData,
+                ) => {
+                    if (!subscriptionData.data) {
+                        return prev;
+                    }
 
-                const newChat = subscriptionData.data.newChatCreated;
+                    const newChat = subscriptionData.data.newChatCreated;
+                    const prevChats = [...prev.chats];
+                    const unexistingChatIndex = prevChats.findIndex(
+                        (chat) => chat.name === newChat.name,
+                    );
 
-                return {
-                    ...prev,
-                    chats: prev.chats.concat([newChat]),
-                };
-            },
-        });
-    }, []);
+                    if (unexistingChatIndex > -1) {
+                        prevChats.splice(unexistingChatIndex, 1, newChat);
+                        return {
+                            ...prev,
+                            chats: prevChats,
+                        };
+                    }
+                    return {
+                        ...prev,
+                        chats: prevChats.concat([newChat]),
+                    };
+                },
+            });
+        }
+    }, [subscribeToMore, isAuth]);
 
-    // SETTING A USER ACTIVE TO DISPLAY A CHAT WITH HIM
-    const [activeUser, setActiveUser] = useState<
-        FindUsersQuery['findUsers'][number] | null
-    >(null);
+    useEffect(() => {
+        if (subscribeToMore && isAuth) {
+            subscribeToMore({
+                document: ChatUpdatedDocument,
+                updateQuery: (
+                    prev,
+                    { subscriptionData }: ISubscriptionData,
+                ) => {
+                    const prevChats = [...prev.chats];
 
-    const handleSetActiveUser = (user: FindUsersQuery['findUsers'][number]) => {
-        setActiveUser(user);
-    };
+                    const updatedChatIndex = prevChats.findIndex(
+                        (chat) =>
+                            chat?.id ===
+                            subscriptionData.data?.newChatCreated?.id,
+                    );
+                    if (
+                        updatedChatIndex > -1 &&
+                        subscriptionData.data?.newChatCreated
+                    ) {
+                        prevChats.splice(
+                            updatedChatIndex,
+                            1,
+                            subscriptionData.data?.newChatCreated,
+                        );
+                    }
+                    return {
+                        ...prev,
+                        chats: prevChats,
+                    };
+                },
+            });
+        }
+    }, [subscribeToMore, isAuth]);
 
     // SETTING A CHAT ACTIVE TO DISPLAY A CHAT FOR IT
-    const [activeChat, setActiveChat] = useState<
-        GetChatsQuery['chats'][number] | null
-    >(null);
+    const [activeChat, setActiveChat] = useState<number | null>(null);
 
-    const handleSetActiveChat = (chat: GetChatsQuery['chats'][number]) => {
-        setActiveChat(chat);
+    const handleSetActiveChat = (index: number) => {
+        setActiveChat(index);
     };
 
     // SEARCH FOR CONTACTS
@@ -117,9 +157,7 @@ export const MainView: React.FC = () => {
     const handleSearchUsers: React.ChangeEventHandler<HTMLInputElement> =
         async (e) => {
             setSearchUser(e.target.value);
-            await refetch?.({
-                username: e.target.value,
-            });
+            refetchChats?.({ search: e.target.value });
         };
 
     const handleLogout = () => {
@@ -139,18 +177,6 @@ export const MainView: React.FC = () => {
             text: 'Выйти',
         },
     ];
-
-    const computeChatName = (chat: GetChatsQuery['chats'][number]) => {
-        const chatUsers = chat.users;
-        const notCurrentUser = chatUsers?.find(
-            (item) => item.id !== currentUser?.getUser.id,
-        );
-        const chatName =
-            chat.type === 'PRIVATE'
-                ? notCurrentUser?.username
-                : 'Some chat name';
-        return chatName;
-    };
 
     const generateMessage = (
         message: GetChatsQuery['chats'][number]['messages'][number],
@@ -176,33 +202,31 @@ export const MainView: React.FC = () => {
                             iconRight={SearchIcon}
                         />
                     </StyledMainAsideTopbar>
-
-                    {searchUser &&
-                        users?.findUsers.map((user) => (
-                            <StyledChatCard
-                                username={user.username}
-                                key={user.id}
-                                active={user.id === activeUser?.id}
-                                onClick={() => handleSetActiveUser(user)}
-                            />
-                        ))}
-                    {!searchUser &&
-                        chats?.chats.map((chat) => (
-                            <StyledChatCard
-                                key={chat.id}
-                                username={computeChatName(chat) || ''}
-                                active={activeChat?.id === chat.id}
-                                onClick={() => handleSetActiveChat(chat)}
-                                message={generateMessage(
-                                    chat.messages[chat.messages.length - 1],
-                                )}
-                            />
-                        ))}
+                    {chats?.chats.map((chat, index) => (
+                        <StyledChatCard
+                            key={chat.name}
+                            username={chat.name}
+                            active={activeChat === index}
+                            onClick={() => handleSetActiveChat(index)}
+                            message={
+                                chat.messages.length
+                                    ? generateMessage(
+                                          chat.messages[
+                                              chat.messages.length - 1
+                                          ],
+                                      )
+                                    : undefined
+                            }
+                        />
+                    ))}
                 </StyledMainAside>
                 <section>
                     <ChatComponent
-                        activeUser={activeUser}
-                        activeChat={activeChat}
+                        activeChat={
+                            activeChat !== null
+                                ? chats?.chats[activeChat]
+                                : null
+                        }
                     />
                 </section>
             </StyledMainLayout>

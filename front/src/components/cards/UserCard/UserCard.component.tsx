@@ -2,8 +2,6 @@ import { Avatar } from 'components/small/Avatar/Avatar.component';
 import React from 'react';
 import {
     StyledOwnerMessage,
-    StyledUserAvatar,
-    StyledUserAvatarImg,
     StyledUserCard,
     StyledUserCardActiveLine,
     StyledUserCardMessage,

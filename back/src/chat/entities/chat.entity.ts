@@ -13,7 +13,7 @@ import { Message } from './message.entity';
 @Entity()
 export class Chat extends BaseEntity {
     @PrimaryGeneratedColumn()
-    id: string;
+    id: number;
 
     @Column()
     type: EChatTypes;

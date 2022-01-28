@@ -127,6 +127,9 @@ export const ApolloProviderLocal = React.memo<IApolloProviderProps>(
             link: from([authLink, errorLink, splitLink]),
             cache: new InMemoryCache({
                 typePolicies: {
+                    ChatModel: {
+                        keyFields: ['name', 'id'],
+                    },
                     Query: {
                         fields: {
                             getUser(prev) {

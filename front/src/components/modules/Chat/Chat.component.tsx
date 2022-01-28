@@ -1,11 +1,7 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
-    FindUsersQuery,
     GetChatsQuery,
     GetPrivateChatQuery,
-    NewMessagesDocument,
-    NewMessagesSubscription,
-    useGetPrivateChatQuery,
     useGetUserQuery,
     useSendMessageMutation,
 } from 'generated/graphql.types';
@@ -24,22 +20,14 @@ import {
 } from './Chat.component.styled';
 
 interface IChatComponentProps {
-    activeUser: FindUsersQuery['findUsers'][number] | null;
-    activeChat: GetChatsQuery['chats'][number] | null;
+    activeChat?: GetChatsQuery['chats'][number] | null;
 }
 
 interface IChatFormFields {
     message: string;
 }
 
-interface ISubscriptionData {
-    subscriptionData: {
-        data?: NewMessagesSubscription;
-    };
-}
-
 export const ChatComponent: React.FC<IChatComponentProps> = ({
-    activeUser,
     activeChat,
 }) => {
     const chatUsers = activeChat?.users;
@@ -48,58 +36,15 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
     const { data: currentUser, error: getUserError } = useGetUserQuery();
     const notCurrentUser = useNotCurrentUser(chatUsers);
 
-    const contact = useMemo(() => {
-        if (activeChat) {
-            return notCurrentUser;
-        }
-        return activeUser;
-    }, [activeChat, activeUser, notCurrentUser]);
-
-    // SUBSCRIPTION FOR NEW MESSAGES
-    const {
-        data,
-        subscribeToMore,
-        refetch: refectchPrivateChat,
-    } = useGetPrivateChatQuery({
-        variables: {
-            contactId: contact?.id || 0,
-        },
-    });
-
-    useEffect(() => {
-        subscribeToMore({
-            document: NewMessagesDocument,
-            updateQuery: (prev, { subscriptionData }: ISubscriptionData) => {
-                if (!subscriptionData.data) return prev;
-
-                const newMessage = subscriptionData.data.messageSent;
-
-                if (prev.privateChat) {
-                    return {
-                        ...prev,
-                        privateChat: {
-                            ...prev.privateChat,
-                            messages: prev.privateChat?.messages.concat([
-                                newMessage,
-                            ]),
-                        },
-                    };
-                }
-                return prev;
-            },
-        });
-    }, []);
-
     useEffect(() => {
         const newMessageUserId =
-            data?.privateChat &&
-            data.privateChat.messages[data.privateChat.messages.length - 1].user
-                .id;
+            activeChat &&
+            activeChat.messages[activeChat.messages.length - 1]?.user.id;
 
-        if (newMessageUserId === currentUser?.getUser.id) {
+        if (newMessageUserId) {
             chatRef.current?.scrollTo(0, chatRef.current?.scrollHeight);
         }
-    }, [data?.privateChat?.messages]);
+    }, [activeChat?.messages]);
 
     // MESSAGE SENDING STUFF
     const [sendMessage] = useSendMessageMutation();
@@ -107,18 +52,19 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
     const { register, handleSubmit, reset } = useForm<IChatFormFields>();
 
     const onSubmit = handleSubmit(async (values) => {
+        console.log(
+            '🚀 ~ file: Chat.component.tsx ~ line 62 ~ onSubmit ~ activeChat?.id',
+            activeChat,
+        );
         await sendMessage({
             variables: {
                 input: {
                     message: values.message,
                     chatId: activeChat?.id,
-                    contactId: activeUser?.id,
+                    contactId: notCurrentUser?.id,
                 },
             },
         });
-        if (!activeChat) {
-            await refectchPrivateChat();
-        }
         reset();
     });
 
@@ -127,16 +73,16 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
             GetPrivateChatQuery['privateChat']
         >['messages'][number],
     ) => {
-        return currentUser?.getUser.id === message.user.id;
+        return currentUser?.getUser.id === message?.user?.id;
     };
 
     return (
         <StyledChat>
             <StyledChatTopBar>
-                <StyledChatName>{contact?.username}</StyledChatName>
+                <StyledChatName>{activeChat?.name}</StyledChatName>
             </StyledChatTopBar>
             <StyledChatContent ref={chatRef}>
-                {data?.privateChat?.messages.map((message) => (
+                {activeChat?.messages.map((message) => (
                     <StyledChatMessage
                         key={message.id}
                         date={new Date(Number(message.date))}

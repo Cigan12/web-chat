@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PubSub } from 'graphql-subscriptions';
 import { User } from 'src/auth/entities/user.entity';
 import { UsersRepository } from 'src/auth/repositories/users.repository';
 import { SendMessageInput } from './inputs/send-message.input';
+import { ChatModel } from './models/chat.model';
 import { ChatRepository } from './repositories/chats.repository';
+import { EChatTypes } from './types/chat-types.enum';
 
 const pubSub = new PubSub();
 @Injectable()
@@ -16,79 +18,173 @@ export class ChatService {
         private usersRepository: UsersRepository,
     ) {}
 
-    async createPrivateChat(user: User, contactId: number) {
+    async createPrivateChat(
+        user: User,
+        contactId: number,
+        message: SendMessageInput['message'],
+    ): Promise<ChatModel> {
         const contact = await this.usersRepository.findOne(contactId);
-        const newChat = await this.chatRepository.createPrivateChat([
+        const newChat = await this.chatRepository.createPrivateChat(
+            [user, contact],
+            message,
             user,
-            contact,
-        ]);
+        );
+        console.log(
+            '🚀 ~ file: chat.service.ts ~ line 32 ~ ChatService ~ newChat',
+            newChat,
+        );
+
+        const chatWithName = {
+            name: this.getContactName(user.id, newChat.users),
+            ...newChat,
+        };
+
+        const chatWithMyName = {
+            name: user.username,
+            ...newChat,
+        };
+
         pubSub.publish('newChatCreated', {
-            newChatCreated: newChat,
+            newChatCreated: chatWithName,
         });
-        return newChat;
+
+        pubSub.publish('newChatCreated', {
+            newChatCreated: chatWithMyName,
+        });
+
+        return chatWithName;
     }
 
-    async getChats(user: User) {
+    getContactName(userId: number, users: Array<User>) {
+        const matchUser = users.find((user) => user.id !== userId);
+        return matchUser.username;
+    }
+
+    async getChats(user: User, search?: string) {
         const userMatch = await this.usersRepository.findOne({
             relations: ['chats'],
             where: { id: user.id },
         });
+        const chats = userMatch.chats.map((chat) => ({
+            name: this.getContactName(user.id, chat.users),
+            ...chat,
+        }));
 
-        return userMatch.chats;
+        if (search) {
+            const users = await this.usersRepository.findUserByUserName(
+                user,
+                search,
+            );
+            const filteredChats = chats.filter((chat) =>
+                chat.name.toLowerCase().includes(search.toLowerCase()),
+            );
+
+            const chatContacts = filteredChats
+                .map((chat) =>
+                    chat.users.filter((chatUser) => chatUser.id !== user.id),
+                )
+                .flat();
+
+            const unexistingChatsWithUsers = users.filter(
+                (searchedUser) =>
+                    !chatContacts.find(
+                        (chatUser) => chatUser.id === searchedUser.id,
+                    ),
+            );
+
+            unexistingChatsWithUsers.forEach((unexistingChat) => {
+                const newChat = new ChatModel();
+                newChat.name = unexistingChat.username;
+                newChat.messages = [];
+                newChat.type = EChatTypes.private;
+                newChat.users = [unexistingChat, user];
+                filteredChats.push(newChat as any);
+            });
+
+            return filteredChats;
+        }
+
+        return chats;
     }
 
     async sendMessage(user: User, input: SendMessageInput) {
+        console.log(
+            '🚀 ~ file: chat.service.ts ~ line 108 ~ ChatService ~ sendMessage ~ input.chatId',
+            input.chatId,
+        );
         if (!input.chatId) {
             const existingChat = await this.getPrivateChat(
                 user,
                 input.contactId,
+            );
+            console.log(
+                '🚀 ~ file: chat.service.ts ~ line 116 ~ ChatService ~ sendMessage ~ existingChat',
+                existingChat,
             );
 
             if (!existingChat) {
                 const chat = await this.createPrivateChat(
                     user,
                     input.contactId,
+                    input.message,
                 );
-                return await this.sendMessageToChat(user, {
-                    chatId: Number(chat.id),
-                    contactId: input.contactId,
-                    message: input.message,
-                });
+                return chat;
             }
         }
-        const message = await this.sendMessageToChat(user, input);
+        const chat = await this.sendMessageToChat(user, input);
 
-        pubSub.publish('messageSent', {
-            messageSent: message,
+        pubSub.publish('chatUpdated', {
+            chatUpdated: {
+                name: this.getContactName(user.id, chat.users),
+                ...chat,
+            },
         });
 
-        return message;
+        pubSub.publish('chatUpdated', {
+            chatUpdated: { name: user.username, ...chat },
+        });
+
+        return chat;
     }
 
     async sendMessageToChat(user: User, input: SendMessageInput) {
-        const message = await this.chatRepository.sendMessage(user, input);
-        return message;
+        const chat = await this.chatRepository.sendMessage(user, input);
+        return chat;
     }
 
     async getPrivateChat(user: User, userId: number) {
+        if (!userId) {
+            throw new InternalServerErrorException('Something went wrong');
+        }
         console.log(
-            '🚀 ~ file: chat.service.ts ~ line 74 ~ ChatService ~ getPrivateChat ~ userId',
+            '🚀 ~ file: chat.service.ts ~ line 156 ~ ChatService ~ getPrivateChat ~ userId',
             userId,
         );
-        console.log(
-            '🚀 ~ file: chat.service.ts ~ line 74 ~ ChatService ~ getPrivateChat ~ user',
-            user,
-        );
         const chats = await this.getChats(user);
+        console.log(
+            '🚀 ~ file: chat.service.ts ~ line 157 ~ ChatService ~ getPrivateChat ~ chats',
+            chats,
+        );
+
         const matchingChat = chats.find((chat) =>
             Boolean(chat.users.find((chatUser) => chatUser.id === userId)),
         );
-        return matchingChat;
+        console.log(
+            '🚀 ~ file: chat.service.ts ~ line 161 ~ ChatService ~ getPrivateChat ~ matchingChat',
+            matchingChat,
+        );
+        if (!matchingChat) {
+            return undefined;
+        }
+        return {
+            name: this.getContactName(user.id, matchingChat.users),
+            ...matchingChat,
+        };
     }
 
     // SUBSCRIPTIONS
-    messageSent() {
-        return pubSub.asyncIterator('messageSent');
+    chatUpdated() {
+        return pubSub.asyncIterator('chatUpdated');
     }
 
     newChatCreated() {

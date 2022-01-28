@@ -1,5 +1,6 @@
 subscription NewChatCreated {
     newChatCreated {
+        name
         id
         type
         users {
