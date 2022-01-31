@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import {
     GetChatsQuery,
-    GetPrivateChatQuery,
     useGetUserQuery,
     useSendMessageMutation,
 } from 'generated/graphql.types';
@@ -52,25 +51,23 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
     const { register, handleSubmit, reset } = useForm<IChatFormFields>();
 
     const onSubmit = handleSubmit(async (values) => {
-        console.log(
-            '🚀 ~ file: Chat.component.tsx ~ line 62 ~ onSubmit ~ activeChat?.id',
-            activeChat,
-        );
-        await sendMessage({
-            variables: {
-                input: {
-                    message: values.message,
-                    chatId: activeChat?.id,
-                    contactId: notCurrentUser?.id,
+        if (values.message) {
+            await sendMessage({
+                variables: {
+                    input: {
+                        message: values.message,
+                        chatId: activeChat?.id,
+                        contactId: notCurrentUser?.id,
+                    },
                 },
-            },
-        });
-        reset();
+            });
+            reset();
+        }
     });
 
     const isMessageOwner = (
         message: NonNullable<
-            GetPrivateChatQuery['privateChat']
+            GetChatsQuery['chats'][number]
         >['messages'][number],
     ) => {
         return currentUser?.getUser.id === message?.user?.id;
@@ -96,10 +93,14 @@ export const ChatComponent: React.FC<IChatComponentProps> = ({
                     <StyledChatInput
                         autoComplete="off"
                         type="text"
+                        disabled={!activeChat}
                         placeholder="Написать сообщение"
                         {...register('message')}
                     />
-                    <StyledChatInputTelegramIcon onClick={onSubmit} />
+                    <StyledChatInputTelegramIcon
+                        color={!activeChat ? '#5A5A5A' : undefined}
+                        onClick={onSubmit}
+                    />
                 </StyledChatInputContainer>
             </form>
         </StyledChat>

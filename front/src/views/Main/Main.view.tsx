@@ -87,13 +87,11 @@ export const MainView: React.FC = () => {
                     if (!subscriptionData.data) {
                         return prev;
                     }
-
                     const newChat = subscriptionData.data.newChatCreated;
                     const prevChats = [...prev.chats];
                     const unexistingChatIndex = prevChats.findIndex(
                         (chat) => chat.name === newChat.name,
                     );
-
                     if (unexistingChatIndex > -1) {
                         prevChats.splice(unexistingChatIndex, 1, newChat);
                         return {
@@ -119,7 +117,6 @@ export const MainView: React.FC = () => {
                     { subscriptionData }: ISubscriptionData,
                 ) => {
                     const prevChats = [...prev.chats];
-
                     const updatedChatIndex = prevChats.findIndex(
                         (chat) =>
                             chat?.id ===
@@ -163,6 +160,7 @@ export const MainView: React.FC = () => {
     const handleLogout = () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        client.clearStore();
         client.resetStore();
         isAuthenticatedVar(false);
         openSignInModal();

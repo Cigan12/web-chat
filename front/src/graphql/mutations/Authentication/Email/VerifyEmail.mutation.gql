@@ -1,0 +1,6 @@
+mutation VerifyEmail($token: String!) {
+    verifyEmail(token: $token) {
+        access_token
+        refresh_token
+    }
+}

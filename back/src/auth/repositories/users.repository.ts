@@ -20,8 +20,9 @@ export class UsersRepository extends Repository<User> {
         user.email = email;
         user.username = username;
         user.password = hashPasword;
+        user.is_verified = false;
         try {
-            await user.save();
+            return await user.save();
         } catch (error) {
             if (error.code === '23505') {
                 throw new ConflictException(
@@ -46,10 +47,10 @@ export class UsersRepository extends Repository<User> {
                 delete userWithoutPassword.password;
                 return userWithoutPassword;
             } else {
-                throw new UnauthorizedException('Invalid credentials');
+                throw new UnauthorizedException('Неверные учетные данные');
             }
         } catch {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException('Неверные учетные данные');
         }
     }
 
@@ -71,5 +72,11 @@ export class UsersRepository extends Repository<User> {
             ],
         });
         return users;
+    }
+
+    async verifyUser(userid: number) {
+        const user = await this.findOne(userid);
+        user.is_verified = true;
+        user.save();
     }
 }

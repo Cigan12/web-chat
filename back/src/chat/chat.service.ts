@@ -108,18 +108,10 @@ export class ChatService {
     }
 
     async sendMessage(user: User, input: SendMessageInput) {
-        console.log(
-            '🚀 ~ file: chat.service.ts ~ line 108 ~ ChatService ~ sendMessage ~ input.chatId',
-            input.chatId,
-        );
         if (!input.chatId) {
             const existingChat = await this.getPrivateChat(
                 user,
                 input.contactId,
-            );
-            console.log(
-                '🚀 ~ file: chat.service.ts ~ line 116 ~ ChatService ~ sendMessage ~ existingChat',
-                existingChat,
             );
 
             if (!existingChat) {
@@ -156,23 +148,13 @@ export class ChatService {
         if (!userId) {
             throw new InternalServerErrorException('Something went wrong');
         }
-        console.log(
-            '🚀 ~ file: chat.service.ts ~ line 156 ~ ChatService ~ getPrivateChat ~ userId',
-            userId,
-        );
+
         const chats = await this.getChats(user);
-        console.log(
-            '🚀 ~ file: chat.service.ts ~ line 157 ~ ChatService ~ getPrivateChat ~ chats',
-            chats,
-        );
 
         const matchingChat = chats.find((chat) =>
             Boolean(chat.users.find((chatUser) => chatUser.id === userId)),
         );
-        console.log(
-            '🚀 ~ file: chat.service.ts ~ line 161 ~ ChatService ~ getPrivateChat ~ matchingChat',
-            matchingChat,
-        );
+
         if (!matchingChat) {
             return undefined;
         }

@@ -22,6 +22,9 @@ export class User extends BaseEntity {
     username: string;
 
     @Column()
+    is_verified: boolean;
+
+    @Column()
     password: string;
 
     @ManyToMany(() => Chat, (chat) => chat.users)

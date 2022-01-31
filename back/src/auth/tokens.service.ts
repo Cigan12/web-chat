@@ -53,4 +53,22 @@ export class TokensService {
             refreshToken,
         };
     }
+
+    generateEmailVerifyToken(userid: number) {
+        return this.jwtService.sign(
+            {
+                userid,
+            },
+            {
+                secret: process.env.EMAIL_TOKEN_SECRET,
+                expiresIn: Number(process.env.EMAIL_TOKEN_EXPIRES),
+            },
+        );
+    }
+
+    verifyToken(token: string, secret: string) {
+        return this.jwtService.verify(token, {
+            secret,
+        });
+    }
 }

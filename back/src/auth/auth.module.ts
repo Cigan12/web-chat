@@ -9,6 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { TokensService } from './tokens.service';
 import { TokensRepository } from './repositories/tokens.repository';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { MailerService } from 'src/mailer/mailer.service';
 
 @Module({})
 export class AuthModule {
@@ -29,6 +30,7 @@ export class AuthModule {
                 JwtStrategy,
                 JwtRefreshStrategy,
                 TokensService,
+                MailerService,
             ],
             module: AuthModule,
         };

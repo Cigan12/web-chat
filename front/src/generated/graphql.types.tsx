@@ -37,6 +37,7 @@ export type Mutation = {
   sendMessage: Scalars['Boolean'];
   signin: TokensModel;
   signup: Scalars['Boolean'];
+  verifyEmail: TokensModel;
 };
 
 
@@ -54,21 +55,20 @@ export type MutationSignupArgs = {
   signUpInput: SignUpInput;
 };
 
+
+export type MutationVerifyEmailArgs = {
+  token: Scalars['String'];
+};
+
 export type Query = {
   __typename?: 'Query';
   chats: Array<ChatModel>;
   getUser: UserModel;
-  privateChat?: Maybe<ChatModel>;
 };
 
 
 export type QueryChatsArgs = {
   search?: Maybe<Scalars['String']>;
-};
-
-
-export type QueryPrivateChatArgs = {
-  contactId: Scalars['Int'];
 };
 
 export type SendMessageInput = {
@@ -107,6 +107,13 @@ export type UserModel = {
   username: Scalars['String'];
 };
 
+export type VerifyEmailMutationVariables = Exact<{
+  token: Scalars['String'];
+}>;
+
+
+export type VerifyEmailMutation = { __typename?: 'Mutation', verifyEmail: { __typename?: 'TokensModel', access_token: string, refresh_token: string } };
+
 export type RefreshMutationVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -140,13 +147,6 @@ export type GetChatsQueryVariables = Exact<{
 
 export type GetChatsQuery = { __typename?: 'Query', chats: Array<{ __typename?: 'ChatModel', name: string, id?: number | null | undefined, type: string, users: Array<{ __typename?: 'UserModel', id: number, email: string, username: string }>, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number, email: string, username: string } }> }> };
 
-export type GetPrivateChatQueryVariables = Exact<{
-  contactId: Scalars['Int'];
-}>;
-
-
-export type GetPrivateChatQuery = { __typename?: 'Query', privateChat?: { __typename?: 'ChatModel', name: string, id?: number | null | undefined, type: string, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number } }> } | null | undefined };
-
 export type GetUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -163,6 +163,40 @@ export type NewChatCreatedSubscriptionVariables = Exact<{ [key: string]: never; 
 export type NewChatCreatedSubscription = { __typename?: 'Subscription', newChatCreated: { __typename?: 'ChatModel', name: string, id?: number | null | undefined, type: string, users: Array<{ __typename?: 'UserModel', id: number, email: string, username: string }>, messages: Array<{ __typename?: 'MessageModel', id: number, date: string, message: string, user: { __typename?: 'UserModel', id: number, email: string, username: string } }> } };
 
 
+export const VerifyEmailDocument = gql`
+    mutation VerifyEmail($token: String!) {
+  verifyEmail(token: $token) {
+    access_token
+    refresh_token
+  }
+}
+    `;
+export type VerifyEmailMutationFn = Apollo.MutationFunction<VerifyEmailMutation, VerifyEmailMutationVariables>;
+
+/**
+ * __useVerifyEmailMutation__
+ *
+ * To run a mutation, you first call `useVerifyEmailMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useVerifyEmailMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [verifyEmailMutation, { data, loading, error }] = useVerifyEmailMutation({
+ *   variables: {
+ *      token: // value for 'token'
+ *   },
+ * });
+ */
+export function useVerifyEmailMutation(baseOptions?: Apollo.MutationHookOptions<VerifyEmailMutation, VerifyEmailMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<VerifyEmailMutation, VerifyEmailMutationVariables>(VerifyEmailDocument, options);
+      }
+export type VerifyEmailMutationHookResult = ReturnType<typeof useVerifyEmailMutation>;
+export type VerifyEmailMutationResult = Apollo.MutationResult<VerifyEmailMutation>;
+export type VerifyEmailMutationOptions = Apollo.BaseMutationOptions<VerifyEmailMutation, VerifyEmailMutationVariables>;
 export const RefreshDocument = gql`
     mutation Refresh {
   refresh {
@@ -344,51 +378,6 @@ export function useGetChatsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<G
 export type GetChatsQueryHookResult = ReturnType<typeof useGetChatsQuery>;
 export type GetChatsLazyQueryHookResult = ReturnType<typeof useGetChatsLazyQuery>;
 export type GetChatsQueryResult = Apollo.QueryResult<GetChatsQuery, GetChatsQueryVariables>;
-export const GetPrivateChatDocument = gql`
-    query GetPrivateChat($contactId: Int!) {
-  privateChat(contactId: $contactId) {
-    name
-    id
-    type
-    messages {
-      id
-      date
-      message
-      user {
-        id
-      }
-    }
-  }
-}
-    `;
-
-/**
- * __useGetPrivateChatQuery__
- *
- * To run a query within a React component, call `useGetPrivateChatQuery` and pass it any options that fit your needs.
- * When your component renders, `useGetPrivateChatQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useGetPrivateChatQuery({
- *   variables: {
- *      contactId: // value for 'contactId'
- *   },
- * });
- */
-export function useGetPrivateChatQuery(baseOptions: Apollo.QueryHookOptions<GetPrivateChatQuery, GetPrivateChatQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<GetPrivateChatQuery, GetPrivateChatQueryVariables>(GetPrivateChatDocument, options);
-      }
-export function useGetPrivateChatLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPrivateChatQuery, GetPrivateChatQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<GetPrivateChatQuery, GetPrivateChatQueryVariables>(GetPrivateChatDocument, options);
-        }
-export type GetPrivateChatQueryHookResult = ReturnType<typeof useGetPrivateChatQuery>;
-export type GetPrivateChatLazyQueryHookResult = ReturnType<typeof useGetPrivateChatLazyQuery>;
-export type GetPrivateChatQueryResult = Apollo.QueryResult<GetPrivateChatQuery, GetPrivateChatQueryVariables>;
 export const GetUserDocument = gql`
     query GetUser {
   getUser {

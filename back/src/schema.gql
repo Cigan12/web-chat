@@ -37,6 +37,7 @@ type Mutation {
   signup(signUpInput: SignUpInput!): Boolean!
   refresh: TokensModel!
   signin(signInInput: SignInInput!): TokensModel!
+  verifyEmail(token: String!): TokensModel!
   sendMessage(input: SendMessageInput!): Boolean!
 }
 
