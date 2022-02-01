@@ -1,0 +1,64 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type UserModel {
+  id: Int!
+  email: String!
+  username: String!
+}
+
+type MessageModel {
+  id: Int!
+  date: String!
+  message: String!
+  user: UserModel!
+}
+
+type ChatModel {
+  id: Int
+  name: String!
+  type: String!
+  messages: [MessageModel!]!
+  users: [UserModel!]!
+}
+
+type TokensModel {
+  access_token: String!
+  refresh_token: String!
+}
+
+type Query {
+  getUser: UserModel!
+  chats(search: String): [ChatModel!]!
+}
+
+type Mutation {
+  signup(signUpInput: SignUpInput!): Boolean!
+  refresh: TokensModel!
+  signin(signInInput: SignInInput!): TokensModel!
+  verifyEmail(token: String!): TokensModel!
+  sendMessage(input: SendMessageInput!): Boolean!
+}
+
+input SignUpInput {
+  email: String!
+  username: String!
+  password: String!
+}
+
+input SignInInput {
+  login: String!
+  password: String!
+}
+
+input SendMessageInput {
+  chatId: Int
+  contactId: Int
+  message: String!
+}
+
+type Subscription {
+  newChatCreated: ChatModel!
+  chatUpdated: ChatModel!
+}

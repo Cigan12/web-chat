@@ -12,6 +12,7 @@ declare module 'process' {
                     EMAIL_TOKEN_SECRET: string;
                     EMAIL_TOKEN_EXPIRES: string;
                     ORIGIN: string;
+                    DB_HOST: string;
                 };
             }
         }

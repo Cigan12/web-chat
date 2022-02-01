@@ -10,12 +10,15 @@ import { AuthModule } from './auth/auth.module';
 @Module({
     imports: [
         ConfigModule.forRoot({
-            envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
+            envFilePath: [
+                `./src/server/.env.${process.env.NODE_ENV}`,
+                './src/server/.env',
+            ],
             isGlobal: true,
         }),
         TypeOrmModule.forRoot({
             type: 'postgres',
-            host: 'localhost',
+            host: process.env.DB_HOST,
             port: 5432,
             username: 'postgres',
             password: 'postgres',
