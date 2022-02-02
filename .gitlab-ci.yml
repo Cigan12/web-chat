@@ -1,0 +1,36 @@
+stages:
+    - deploy
+
+deploy:
+    stage: deploy
+    tags:
+        - web-chat-develop
+    only:
+        - develop
+    variables:
+        DEPLOY_SUCCES_BODY: '''{ "text": "Web chat PRODUCTION has been sucessfully deployed, check https://dev-webchat.nickolay-ivanov.ru", "chat_id": $deploy_chat_id}'''
+        DEPLOY_SUCCES: "curl --location --request POST 'https://telegram.air-thought.com/deployment' --header 'Content-Type: application/json' --data-raw $DEPLOY_SUCCES_BODY"
+    environment:
+        name: development
+        url: https://dev-webchat.nickolay-ivanov.ru
+    script:
+        - echo "port=$port" > .env
+        - docker-compose -p webchat-dev up --build -d
+        - 'eval "$DEPLOY_SUCCES"'
+
+deploy_master:
+    stage: deploy
+    tags:
+        - web-chat-prod
+    only:
+        - master
+    variables:
+        DEPLOY_SUCCES_BODY: '''{ "text": "Web chat PRODUCTION has been sucessfully deployed, check https://webchat.nickolay-ivanov.ru", "chat_id": $deploy_chat_id}'''
+        DEPLOY_SUCCES: "curl --location --request POST 'https://telegram.air-thought.com/deployment' --header 'Content-Type: application/json' --data-raw $DEPLOY_SUCCES_BODY"
+    environment:
+        name: production
+        url: https://webchat.nickolay-ivanov.ru
+    script:
+        - echo "port=$port" > .env
+        - docker-compose up --build -d
+        - 'eval "$DEPLOY_SUCCES"'
